@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>CanvasCard.qml</file>
+        <file>ChartCard.qml</file>
+        <file>InputData.qml</file>
+        <file>OutputData.qml</file>
+        <file>Transform.qml</file>
+    </qresource>
+</RCC>
