@@ -12,6 +12,7 @@ class ParameterCalculation : public QObject
     Q_PROPERTY(int indexComboBoxConsum MEMBER m_indexComboBoxConsum)
     Q_PROPERTY(double economicSection MEMBER m_economicSection)
     Q_PROPERTY(double resistancePhaseZero MEMBER m_resistancePhaseZero)
+    Q_PROPERTY(double singlePhaseShortCircuit MEMBER m_singlePhaseShortCircuit)
 
     QVector<double> m_vecActivLoad;//вектор активных нагрузок
     QVector<double> m_vecLengthSite;//вектор длин участков
@@ -21,13 +22,14 @@ class ParameterCalculation : public QObject
     QVector<double> m_vecFullPower;//вектор полных мощностей
     QVector<double> m_vecEquivalentPower;//вектор эквивалентных мощностей
     QVector<double> m_vecEquivalentCurrent;//вектор эквивалентных токов
-    //QVector<double> m_vecEconomicSection;//вектор экономического сечения
+    QVector<double> m_vecResistancePhaseZero;//вектор сопротивлений фаза-ноль
 
     int m_numberOfConsumers = 0;
     double m_Pmax = 0;
     int m_indexComboBoxConsum = 0;
     double m_economicSection = 0;
     double m_resistancePhaseZero = 0;
+    double m_singlePhaseShortCircuit = 0;
 
     //Сопротивления провода
     struct resistanceWire {
@@ -185,6 +187,9 @@ public:
     Q_INVOKABLE void calculationEconomicSection(const double, const int);//расчет экономического сечения
     Q_INVOKABLE void calculationResistancePhaseZero(const int, const int);/* метод принимает
     значения активного и реактивного сопротивлений фазного и нулевго проводов и рассчитывае сопротивление петли фаза-ноль*/
+    Q_INVOKABLE void calculationSinglePhaseShortCircuit(const int);//расчет однофазных КЗ
+    Q_INVOKABLE void fillingResistanceVectorPhaseZero();//заполнение вектора сопротивления петли фаза-ноль значением -1
+    Q_INVOKABLE bool checkResistanceVectorPhaseZero();//проверка вектора сопротивления петли фаза-ноль на наличие значения -1
 
     bool isMoreThenFourTimes(int);//определение отличия нагрузок
     void calculationWeightedAverage();//расчет средневзвешенных косинусов по участкам

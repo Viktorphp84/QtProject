@@ -253,13 +253,16 @@ Item {
                 placeholderText: "0"
 
                 onEditingFinished: {
+
+                    //Расчет экономического сечения
                     parameterCalculation.calculationEconomicSection(
                                 Number(textFieldEconomicCurrent.text),
                                 parent.sectionNumber)
                     let economicSection = parameterCalculation.economicSection
                     textFieldEconomicSection.text = economicSection
-                    let section = [0, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240]
 
+                    //Расчет стандартного сечения
+                    let section = [0, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240]
                     for (var i = 0; i < section.length - 1; ++i) {
                         if (economicSection > section[i]
                                 && economicSection <= section[i + 1]) {
@@ -269,11 +272,20 @@ Item {
                         }
                     }
 
+                    //Расчет сопротивления фаза-ноль
                     let resistancePhaseZero = parameterCalculation.calculationResistancePhaseZero(
                             columnScroll_4.children[parent.sectionNumber].currentIndex,
                             sectionNumber)
                     outData.columnScrollOutput_8.children[sectionNumber].textField = String(
                                 parameterCalculation.resistancePhaseZero)
+
+                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {
+
+                        //расчитываем все однофазные КЗ
+                    } else {
+
+                        //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
+                    }
                 }
             }
 
@@ -334,6 +346,7 @@ Item {
             outData.columnScrollOutput_6.children[n - 1].destroy()
             outData.columnScrollOutput_7.children[n - 1].destroy()
             outData.columnScrollOutput_8.children[n - 1].destroy()
+            outData.columnScrollOutput_9.children[n - 1].destroy()
         }
 
         let i
@@ -368,6 +381,10 @@ Item {
                                                       "sectionNumber": i
                                                   })
             componentLine.createObject(outData.columnScrollOutput_8, {
+                                           "text": str
+                                           //"textField":
+                                       })
+            componentLine.createObject(outData.columnScrollOutput_9, {
                                            "text": str
                                            //"textField":
                                        })
@@ -668,6 +685,7 @@ Item {
                         onEditingFinished: {
                             loadLine(displayText)
                             parameterCalculation.numberOfConsumers = displayText
+                            parameterCalculation.fillingResistanceVectorPhaseZero()
                         }
                     }
 

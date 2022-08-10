@@ -210,3 +210,22 @@ void ParameterCalculation::calculationResistancePhaseZero(const int currentIndex
                                  + m_vecResistanceWire[currentIndex].reactanceZero), 2);
     m_resistancePhaseZero = m_vecLengthSite[sectionNumber] * qSqrt(squareActivResistance + squaReactance);
 }
+
+void ParameterCalculation::calculationSinglePhaseShortCircuit(const int sectionNumber) {
+
+}
+
+void ParameterCalculation::fillingResistanceVectorPhaseZero() {
+    for(int i = 0; i < m_numberOfConsumers; ++i) {
+        m_vecResistancePhaseZero.push_back(-1);
+    }
+}
+
+bool ParameterCalculation::checkResistanceVectorPhaseZero() {
+    QVector<double>::iterator begin = m_vecResistancePhaseZero.begin();
+    QVector<double>::iterator end = m_vecResistancePhaseZero.end();
+    QVector<double>::iterator it;
+    it = std::find(begin, end, -1);
+    bool result = (it == end) ? true : false;
+    return result;
+}

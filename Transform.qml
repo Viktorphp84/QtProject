@@ -10,6 +10,8 @@ Item {
     width: root.width
     height: root.height
 
+    property double transformerResistance: 0
+
     DropShadow {
         id: dropShadow
         anchors.fill: transRect
@@ -162,7 +164,6 @@ Item {
                         tableView.textCell = displayText
                         tableView.model.writeData(tableView.indexCell,
                                                   tableView.textCell)
-                        //console.log(displayText)
                     }
                 }
 
@@ -185,6 +186,7 @@ Item {
                         }
                         textEdited.forceActiveFocus()
                         tableView.columnTable = index
+                        transformerResistance = parseFloat(display)
                     }
                 }
             }

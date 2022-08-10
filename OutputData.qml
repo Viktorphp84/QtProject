@@ -13,6 +13,7 @@ Item {
     property var columnScrollOutput_6: columnScrollOutput_6
     property var columnScrollOutput_7: columnScrollOutput_7
     property var columnScrollOutput_8: columnScrollOutput_8
+    property var columnScrollOutput_9: columnScrollOutput_9
 
     width: 677
     height: 360
@@ -378,6 +379,44 @@ Item {
 
                                 Column {
                                     id: columnScrollOutput_8
+                                }
+                            }
+                        }
+                    }
+
+                    /*******************************************************************************************/
+
+                    //Колонка однофазных КЗ
+                    /*******************************************************************************************/
+                    Item {
+                        width: 158
+                        height: 220
+
+                        Label {
+                            id: labelSinglePhaseShortCircuit
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 5
+                            anchors.bottomMargin: 10
+                            text: qsTr("Однофазное КЗ, А")
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: labelSinglePhaseShortCircuit.bottom
+                            color: "#e4e4e4"
+                            radius: 5
+
+                            ScrollView {
+                                x: 0
+                                y: 0
+                                width: 158
+                                height: 200
+
+                                Column {
+                                    id: columnScrollOutput_9
                                 }
                             }
                         }
