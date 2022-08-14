@@ -188,9 +188,42 @@ Item {
                         }
                         textEdited.forceActiveFocus()
                         tableView.columnTable = index
-                        transCard.transformerResistance = parseFloat(display)
+                        if (index % 4) {
+                            transCard.transformerResistance = parseFloat(
+                                        display)
+                        } else {
+                            //вывод сообщения о выборе правильной ячейки
+                            dialogCell.visible = true
+                        }
                     }
                 }
+            }
+        }
+
+        Dialog {
+            id: dialogCell
+            anchors.centerIn: parent
+            width: 220
+            height: 85
+            Text {
+                id: textDialogCell
+                anchors.top: parent.top
+                anchors.topMargin: 5
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("   Для расчетов выберите\nячейку с сопротивлением!")
+            }
+            visible: false
+
+            Button {
+                id: buttonDialogCell
+                anchors.top: textDialogCell.bottom
+                anchors.topMargin: 5
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 70
+                height: 30
+                text: "Ok"
+
+                onClicked: dialogCell.accept()
             }
         }
 
