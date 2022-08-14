@@ -252,7 +252,7 @@ Item {
                 width: 70
                 placeholderText: "0"
 
-                onEditingFinished: {
+                onAccepted: {
 
                     //Расчет экономического сечения
                     parameterCalculation.calculationEconomicSection(
@@ -272,7 +272,7 @@ Item {
                         }
                     }
 
-                    //Расчет сопротивления фаза-ноль
+                    //Расчет сопротивления петли фаза-ноль
                     let resistancePhaseZero = parameterCalculation.calculationResistancePhaseZero(
                             columnScroll_4.children[parent.sectionNumber].currentIndex,
                             sectionNumber)
@@ -281,7 +281,14 @@ Item {
 
                     if (parameterCalculation.checkResistanceVectorPhaseZero()) {
 
-                        //расчитываем все однофазные КЗ
+                        parameterCalculation.calculationSinglePhaseShortCircuit(
+                                    root.componentTransformApp.transformerResistance)
+                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit()
+                        let i
+                        for (i = 0; i < numberOfConsumers; ++i) {
+                            outData.columnScrollOutput_9.children[i].textField = String(
+                                        vecSinglePhaseShortCircuit[i])
+                        }
                     } else {
 
                         //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
@@ -682,7 +689,7 @@ Item {
                         id: textField
                         layer.enabled: false
                         placeholderText: qsTr("0")
-                        onEditingFinished: {
+                        onAccepted: {
                             loadLine(displayText)
                             parameterCalculation.numberOfConsumers = displayText
                             parameterCalculation.fillingResistanceVectorPhaseZero()

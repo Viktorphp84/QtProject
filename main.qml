@@ -13,13 +13,14 @@ ApplicationWindow {
     property string number: modalTextInput.displayText
     property int numInt: parseInt(number)
     property alias visibleDialogOver_240: dialogSectionOver_240.visible
+    property var componentTransformApp
 
     function onAcceptedDialog() {
 
         dynamicTabBar.addItem(componentTabButton.createObject(dynamicTabBar, {
                                                                   "text": "Параметры трансформатора"
                                                               }))
-        componentTransform.createObject(stackTab)
+        componentTransformApp = componentTransform.createObject(stackTab)
 
         for (var i = 0; i < numInt; ++i) {
             var string = ' Линия ' + (i + 1) + ' '
@@ -107,7 +108,9 @@ ApplicationWindow {
 
     Component {
         id: componentTransform
-        Transform {}
+        Transform {
+            id: transData
+        }
     }
 
     Component {

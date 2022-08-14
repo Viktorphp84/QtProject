@@ -27,7 +27,9 @@ Item {
         id: transRect
         x: 0
         y: 0
+
         property int widthFrame: tableView.contentWidth + leftTopRect.width + 23
+
         width: widthFrame
         height: 320
         radius: 5
@@ -186,7 +188,7 @@ Item {
                         }
                         textEdited.forceActiveFocus()
                         tableView.columnTable = index
-                        transformerResistance = parseFloat(display)
+                        transCard.transformerResistance = parseFloat(display)
                     }
                 }
             }

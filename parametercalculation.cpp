@@ -177,6 +177,10 @@ QVector<double> ParameterCalculation::getVecEquivalentCurrent() const {
     return m_vecEquivalentCurrent;
 }
 
+QVector<double> ParameterCalculation::getVecSinglePhaseShortCircuit() const {
+    return m_vecSinglePhaseShortCircuit;
+}
+
 void ParameterCalculation::calculationEquivalentPower() {
     for(int i = 0; i < m_numberOfConsumers; ++i) {
         double sumLength = 0;
@@ -209,10 +213,15 @@ void ParameterCalculation::calculationResistancePhaseZero(const int currentIndex
     double squaReactance = qPow((m_vecResistanceWire[currentIndex].reactancePhase
                                  + m_vecResistanceWire[currentIndex].reactanceZero), 2);
     m_resistancePhaseZero = m_vecLengthSite[sectionNumber] * qSqrt(squareActivResistance + squaReactance);
+    m_vecResistancePhaseZero[sectionNumber] = m_resistancePhaseZero;
 }
 
-void ParameterCalculation::calculationSinglePhaseShortCircuit(const int sectionNumber) {
-
+void ParameterCalculation::calculationSinglePhaseShortCircuit(const double transformerResistance) {
+    double sumResistancePhaseZero = 0;
+    for(int i = 0; i < m_numberOfConsumers; ++i) {
+        sumResistancePhaseZero += m_vecResistancePhaseZero[i];
+        m_vecSinglePhaseShortCircuit.push_back(220 / (transformerResistance / 3 + sumResistancePhaseZero));
+    }
 }
 
 void ParameterCalculation::fillingResistanceVectorPhaseZero() {
