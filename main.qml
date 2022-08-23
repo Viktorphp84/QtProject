@@ -14,6 +14,7 @@ ApplicationWindow {
     property int numInt: parseInt(number)
     property alias visibleDialogOver_240: dialogSectionOver_240.visible
     property var componentTransformApp
+    property var componentCardsApp
 
     function onAcceptedDialog() {
 
@@ -28,7 +29,7 @@ ApplicationWindow {
                                       dynamicTabBar, {
                                           "text": string
                                       }))
-            componentCards.createObject(stackTab)
+            componentCardsApp = componentCards.createObject(stackTab)
         }
 
         modalDialog.accept()
@@ -117,7 +118,8 @@ ApplicationWindow {
         id: componentCards
 
         Item {
-
+            property var componentInput: inpData
+            property var componentOutput: outData
             InputData {
                 id: inpData
                 x: 0

@@ -12,6 +12,27 @@ Item {
 
     property double transformerResistance: 0
 
+    //Расчет однофазного КЗ
+    function calcSinglePhaseShortCircuit() {
+
+        let input = root.componentCardsApp.componentInput.parameterCalculation
+        let output = root.componentCardsApp.componentOutput
+        if (input.checkResistanceVectorPhaseZero()) {
+            input.calculationSinglePhaseShortCircuit(
+                        root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
+            let vecSinglePhaseShortCircuit = input.getVecSinglePhaseShortCircuit(
+                    ) //запись в вектор
+            let i
+            for (i = 0; i < input.numberOfConsumers; ++i) {
+                output.columnScrollOutput_9.children[i].textField = String(
+                            vecSinglePhaseShortCircuit[i]) //заполнение строк
+            }
+        } else {
+
+            //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
+        }
+    }
+
     DropShadow {
         id: dropShadow
         anchors.fill: transRect
@@ -191,6 +212,7 @@ Item {
                         if (index % 4) {
                             transCard.transformerResistance = parseFloat(
                                         display)
+                            calcSinglePhaseShortCircuit()
                         } else {
                             //вывод сообщения о выборе правильной ячейки
                             dialogCell.visible = true

@@ -217,10 +217,13 @@ void ParameterCalculation::calculationResistancePhaseZero(const int currentIndex
 }
 
 void ParameterCalculation::calculationSinglePhaseShortCircuit(const double transformerResistance) {
-    double sumResistancePhaseZero = 0;
-    for(int i = 0; i < m_numberOfConsumers; ++i) {
-        sumResistancePhaseZero += m_vecResistancePhaseZero[i];
-        m_vecSinglePhaseShortCircuit.push_back(220 / (transformerResistance / 3 + sumResistancePhaseZero));
+    if(!m_vecResistancePhaseZero.isEmpty()) {
+        double sumResistancePhaseZero = 0;
+        m_vecSinglePhaseShortCircuit.clear();
+        for(int i = 0; i < m_numberOfConsumers; ++i) {
+            sumResistancePhaseZero += m_vecResistancePhaseZero[i];
+            m_vecSinglePhaseShortCircuit.push_back(220 / (transformerResistance / 3 + sumResistancePhaseZero));
+        }
     }
 }
 

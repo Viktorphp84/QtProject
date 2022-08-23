@@ -279,15 +279,15 @@ Item {
                     outData.columnScrollOutput_8.children[sectionNumber].textField = String(
                                 parameterCalculation.resistancePhaseZero)
 
-                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {
+                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {//проверка, что заполнены все строки
 
                         parameterCalculation.calculationSinglePhaseShortCircuit(
-                                    root.componentTransformApp.transformerResistance)
-                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit()
+                                    root.componentTransformApp.transformerResistance)//расчет однофазного КЗ
+                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit()//запись в вектор
                         let i
                         for (i = 0; i < numberOfConsumers; ++i) {
                             outData.columnScrollOutput_9.children[i].textField = String(
-                                        vecSinglePhaseShortCircuit[i])
+                                        vecSinglePhaseShortCircuit[i])//заполнение строк
                         }
                     } else {
 
