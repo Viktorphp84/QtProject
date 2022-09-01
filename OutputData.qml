@@ -15,6 +15,8 @@ Item {
     property var columnScrollOutput_8: columnScrollOutput_8
     property var columnScrollOutput_9: columnScrollOutput_9
 
+    property alias resistanceTransformer: textFieldResistanseTransform.text
+
     width: 677
     height: 360
     layer.enabled: true
@@ -67,6 +69,7 @@ Item {
             }
 
             ScrollView {
+                id: scrollViewOutput
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: labelOutputData.bottom
@@ -423,6 +426,24 @@ Item {
                     }
 
                     /*******************************************************************************************/
+                }
+            }
+
+            Item {
+                anchors.top: scrollViewOutput.bottom
+                anchors.left: parent.left
+                anchors.topMargin: 20
+                anchors.leftMargin: 20
+                Row {
+                    spacing: 10
+                    Label {
+                        text: "Текущее сопротивление трансформатора"
+                    }
+                    TextField {
+                        id: textFieldResistanseTransform
+                        width: 80
+                        placeholderText: "0"
+                    }
                 }
             }
 

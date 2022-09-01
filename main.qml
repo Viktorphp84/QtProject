@@ -120,6 +120,7 @@ ApplicationWindow {
         Item {
             property var componentInput: inpData
             property var componentOutput: outData
+            property var componentChart: chartComp
             InputData {
                 id: inpData
                 x: 0

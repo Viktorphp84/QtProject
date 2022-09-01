@@ -3,6 +3,7 @@ import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts
 import ParameterCalculation
+import QtCharts
 
 //import QtQml.Models
 Item {
@@ -223,6 +224,7 @@ Item {
             }
         }
     }
+
     /*******************************************************************************************************/
 
     //Компонент для динамического отображения строк для расчета экономического сечения
@@ -279,15 +281,31 @@ Item {
                     outData.columnScrollOutput_8.children[sectionNumber].textField = String(
                                 parameterCalculation.resistancePhaseZero)
 
-                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {//проверка, что заполнены все строки
+                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {
 
+                        //проверка, что заполнены все строки
                         parameterCalculation.calculationSinglePhaseShortCircuit(
-                                    root.componentTransformApp.transformerResistance)//расчет однофазного КЗ
-                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit()//запись в вектор
+                                    root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
+                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit(
+                                ) //запись в вектор
                         let i
                         for (i = 0; i < numberOfConsumers; ++i) {
                             outData.columnScrollOutput_9.children[i].textField = String(
-                                        vecSinglePhaseShortCircuit[i])//заполнение строк
+                                        vecSinglePhaseShortCircuit[i]) //заполнение строк
+                        }
+
+                        //Расчет потерь напряжения и добавление точек на график потерь напряжения
+                        root.componentCardsApp.componentChart.lineSeries.append(
+                                    0, 0)
+                        let y
+                        for (y = 0; y < numberOfConsumers; ++y) {
+                            let voltageLoss = parameterCalculation.calculationVoltageLoss(
+                                    columnScroll_4.children[y].currentIndex, y)
+                            outData.columnScrollOutput_4.children[y].textField = String(
+                                        voltageLoss)
+
+                            root.componentCardsApp.componentChart.lineSeries.append(
+                                        y + 1, voltageLoss)
                         }
                     } else {
 

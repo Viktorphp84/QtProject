@@ -188,6 +188,12 @@ Item {
                         tableView.model.writeData(tableView.indexCell,
                                                   tableView.textCell)
                     }
+
+                    onAccepted: {
+                        transCard.transformerResistance = parseFloat(display)
+                        root.componentCardsApp.componentOutput.resistanceTransformer = display
+                        calcSinglePhaseShortCircuit()
+                    }
                 }
 
                 MouseArea {
@@ -212,6 +218,7 @@ Item {
                         if (index % 4) {
                             transCard.transformerResistance = parseFloat(
                                         display)
+                            root.componentCardsApp.componentOutput.resistanceTransformer = display
                             calcSinglePhaseShortCircuit()
                         } else {
                             //вывод сообщения о выборе правильной ячейки

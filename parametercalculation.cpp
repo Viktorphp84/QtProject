@@ -241,3 +241,9 @@ bool ParameterCalculation::checkResistanceVectorPhaseZero() {
     bool result = (it == end) ? true : false;
     return result;
 }
+
+double ParameterCalculation::calculationVoltageLoss(const int currentIndex, const int numberSection) {
+    double sin = qSqrt(1 - qPow(m_vecWeightedAverageCoefficient[numberSection], 2));
+    double voltageLoss = (m_vecFullPower[numberSection] * (m_vecResistanceWire[currentIndex].activResistancePhase * m_vecWeightedAverageCoefficient[numberSection] + m_vecResistanceWire[currentIndex].reactancePhase * sin) * m_vecLengthSite[numberSection]) / 0.38;
+    return voltageLoss;
+}

@@ -3,6 +3,7 @@ import QtCharts
 import Qt5Compat.GraphicalEffects
 
 Item {
+    property var lineSeries: lineSeriesChart
 
     DropShadow {
         anchors.fill: rectChart
@@ -24,31 +25,28 @@ Item {
         ChartView {
             id: chartCard
             anchors.centerIn: parent
+            ValuesAxis {
+                id: valueAxisX
+                min: 0
+                max: 10
+                tickCount: 11
+            }
+
+            ValuesAxis {
+                id: valueAxisY
+                min: 0
+                max: 9
+                tickCount: 10
+            }
 
             width: parent.width
             height: parent.height
 
             LineSeries {
+                id: lineSeriesChart
+                axisX: valueAxisX
+                axisY: valueAxisY
                 name: "График отклонения напряжения"
-                XYPoint {
-                    x: 0
-                    y: 2
-                }
-
-                XYPoint {
-                    x: 1
-                    y: 1.2
-                }
-
-                XYPoint {
-                    x: 2
-                    y: 3.3
-                }
-
-                XYPoint {
-                    x: 5
-                    y: 2.1
-                }
             }
         }
 
@@ -71,4 +69,3 @@ Item {
         }
     }
 }
-

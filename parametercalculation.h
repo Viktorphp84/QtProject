@@ -23,6 +23,7 @@ class ParameterCalculation : public QObject
     QVector<double> m_vecEquivalentCurrent;//вектор эквивалентных токов
     QVector<double> m_vecResistancePhaseZero;//вектор сопротивлений фаза-ноль
     QVector<double> m_vecSinglePhaseShortCircuit;//вектор однофазных КЗ по участкам
+    QVector<double> m_vecVoltageLoss;//вектор потерь напряжения
 
     int m_numberOfConsumers = 0;
     double m_Pmax = 0;
@@ -191,6 +192,7 @@ public:
     Q_INVOKABLE void calculationSinglePhaseShortCircuit(const double);//расчет однофазных КЗ
     Q_INVOKABLE void fillingResistanceVectorPhaseZero();//заполнение вектора сопротивления петли фаза-ноль значением -1
     Q_INVOKABLE bool checkResistanceVectorPhaseZero();//проверка вектора сопротивления петли фаза-ноль на наличие значения -1
+    Q_INVOKABLE double calculationVoltageLoss(const int, const int);//расчет потерь напряжения
 
     bool isMoreThenFourTimes(int);//определение отличия нагрузок
     void calculationWeightedAverage();//расчет средневзвешенных косинусов по участкам
