@@ -124,7 +124,6 @@ Item {
                 onAccepted: {
                     let number = listModelComboWire.get(
                             comboBoxWire.currentIndex)
-                    console.log(number)
                 }
 
                 model: ListModel {
@@ -710,6 +709,10 @@ Item {
                         onAccepted: {
                             loadLine(displayText)
                             parameterCalculation.numberOfConsumers = displayText
+                            root.componentCardsApp.componentChart.maxAxisX
+                                    = parameterCalculation.numberOfConsumers
+                            root.componentCardsApp.componentChart.tickCountX
+                                    = parameterCalculation.numberOfConsumers + 1
                             parameterCalculation.fillingResistanceVectorPhaseZero()
                         }
                     }
