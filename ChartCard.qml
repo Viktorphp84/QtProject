@@ -1,17 +1,27 @@
 import QtQuick
 import QtCharts
 import Qt5Compat.GraphicalEffects
+//import QtQml 2.0
 
 Item {
     property var lineSeries: lineSeriesChart
     property alias maxAxisX: valueAxisX.max
     property alias tickCountX: valueAxisX.tickCount
+    property alias maxAxisY: valueAxisY.max
+    property alias tickCountY: valueAxisY.tickCount
 
     //Переменные для сохранения позиции и размера окна при развертываниии на весь экран
     property int chartX: 0
     property int chartY: 0
     property int chartWidth: 0
     property int chartHeight: 0
+
+    function chartLocale() {
+        let locale = Qt.locale("en")
+        locale.numberOptions = "DefaultNumberOptions"
+        console.log(locale.numberOptions)
+        return locale
+    }
 
     DropShadow {
         anchors.fill: rectChart
@@ -33,11 +43,17 @@ Item {
         ChartView {
             id: chartCard
             anchors.centerIn: parent
+            localizeNumbers: true
+            locale: Qt.locale("en")
+            antialiasing: true
+
             ValuesAxis {
                 id: valueAxisX
                 min: 0
                 max: 10
                 tickCount: 11
+                titleText: "Участки"
+                labelFormat: "%.0f"
             }
 
             ValuesAxis {
@@ -45,6 +61,8 @@ Item {
                 min: 0
                 max: 9
                 tickCount: 10
+                titleText: "Потеря напряжения, В"
+                labelFormat: "%.0f"
             }
 
             width: parent.width

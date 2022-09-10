@@ -15,21 +15,23 @@ Item {
     //Расчет однофазного КЗ
     function calcSinglePhaseShortCircuit() {
 
-        let input = root.componentCardsApp.componentInput.parameterCalculation
-        let output = root.componentCardsApp.componentOutput
-        if (input.checkResistanceVectorPhaseZero()) {
-            input.calculationSinglePhaseShortCircuit(
-                        root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
-            let vecSinglePhaseShortCircuit = input.getVecSinglePhaseShortCircuit(
-                    ) //запись в вектор
-            let i
-            for (i = 0; i < input.numberOfConsumers; ++i) {
-                output.columnScrollOutput_9.children[i].textField = String(
-                            vecSinglePhaseShortCircuit[i]) //заполнение строк
-            }
-        } else {
+        for (var i = 0; i < root.componentCardsApp.length; ++i) {
+            let input = root.componentCardsApp[i].componentInput.parameterCalculation
+            let output = root.componentCardsApp[i].componentOutput
+            if (input.checkResistanceVectorPhaseZero()) {
+                input.calculationSinglePhaseShortCircuit(
+                            root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
+                let vecSinglePhaseShortCircuit = input.getVecSinglePhaseShortCircuit(
+                        ) //запись в вектор
 
-            //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
+                for (var u = 0; u < input.numberOfConsumers; ++u) {
+                    output.columnScrollOutput_9.children[u].textField = String(
+                                vecSinglePhaseShortCircuit[u]) //заполнение строк
+                }
+            } else {
+
+                //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
+            }
         }
     }
 
@@ -191,7 +193,12 @@ Item {
 
                     onAccepted: {
                         transCard.transformerResistance = parseFloat(display)
-                        root.componentCardsApp.componentOutput.resistanceTransformer = display
+                        //root.componentCardsApp.componentOutput.resistanceTransformer = display
+                        for (var i = 0; i < root.componentCardsApp.length; ++i) {
+                            root.componentCardsApp[i].componentOutput.resistanceTransformer
+                                    = display
+                        }
+
                         calcSinglePhaseShortCircuit()
                     }
                 }
@@ -218,7 +225,11 @@ Item {
                         if (index % 4) {
                             transCard.transformerResistance = parseFloat(
                                         display)
-                            root.componentCardsApp.componentOutput.resistanceTransformer = display
+                            //root.componentCardsApp.componentOutput.resistanceTransformer = display
+                            for (var i = 0; i < root.componentCardsApp.length; ++i) {
+                                root.componentCardsApp[i].componentOutput.resistanceTransformer
+                                        = display
+                            }
                             calcSinglePhaseShortCircuit()
                         } else {
                             //вывод сообщения о выборе правильной ячейки

@@ -264,7 +264,7 @@ Item {
 
                     //Расчет стандартного сечения
                     let section = [0, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240]
-                    for (var i = 0; i < section.length - 1; ++i) {
+                    for (let i = 0; i < section.length - 1; ++i) {
                         if (economicSection > section[i]
                                 && economicSection <= section[i + 1]) {
                             columnScroll_4.children[parent.sectionNumber].currentIndex = i + 1
@@ -287,25 +287,41 @@ Item {
                                     root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
                         let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit(
                                 ) //запись в вектор
-                        let i
-                        for (i = 0; i < numberOfConsumers; ++i) {
+
+                        for (let i = 0; i < numberOfConsumers; ++i) {
                             outData.columnScrollOutput_9.children[i].textField = String(
                                         vecSinglePhaseShortCircuit[i]) //заполнение строк
                         }
 
                         //Расчет потерь напряжения и добавление точек на график потерь напряжения
-                        root.componentCardsApp.componentChart.lineSeries.append(
-                                    0, 0)
-                        let y
-                        for (y = 0; y < numberOfConsumers; ++y) {
+                        chartComp.lineSeries.append(0, 0)
+
+                        let arrayVoltageLoss = []
+                        let maxValue
+                        let sumVoltageLoss = 0
+                        for (let y = 0; y < numberOfConsumers; ++y) {
                             let voltageLoss = parameterCalculation.calculationVoltageLoss(
                                     columnScroll_4.children[y].currentIndex, y)
+                            sumVoltageLoss += voltageLoss
+                            arrayVoltageLoss.push(sumVoltageLoss)
                             outData.columnScrollOutput_4.children[y].textField = String(
                                         voltageLoss)
-
-                            root.componentCardsApp.componentChart.lineSeries.append(
-                                        y + 1, voltageLoss)
+                            chartComp.lineSeries.append(y + 1, sumVoltageLoss)
                         }
+                        maxValue = Math.max(...arrayVoltageLoss)
+                        let axisY = Math.ceil(maxValue)
+                        if(axisY % 2 != 0) {
+                            axisY += 1
+                        }
+
+                        let tickY = 0
+                        if(axisY <= 30) {
+                            tickY = Math.ceil(maxValue) + 1
+                        } else {
+                            tickY = axisY / 2 + 1
+                        }
+                        chartComp.maxAxisY = axisY
+                        chartComp.tickCountY = tickY
                     } else {
 
                         //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
@@ -709,10 +725,9 @@ Item {
                         onAccepted: {
                             loadLine(displayText)
                             parameterCalculation.numberOfConsumers = displayText
-                            root.componentCardsApp.componentChart.maxAxisX
-                                    = parameterCalculation.numberOfConsumers
-                            root.componentCardsApp.componentChart.tickCountX
-                                    = parameterCalculation.numberOfConsumers + 1
+
+                            chartComp.maxAxisX = parameterCalculation.numberOfConsumers
+                            chartComp.tickCountX = parameterCalculation.numberOfConsumers + 1
                             parameterCalculation.fillingResistanceVectorPhaseZero()
                         }
                     }
