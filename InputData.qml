@@ -310,16 +310,18 @@ Item {
                         }
                         maxValue = Math.max(...arrayVoltageLoss)
                         let axisY = Math.ceil(maxValue)
-                        if(axisY % 2 != 0) {
-                            axisY += 1
-                        }
 
-                        let tickY = 0
-                        if(axisY <= 30) {
-                            tickY = Math.ceil(maxValue) + 1
-                        } else {
-                            tickY = axisY / 2 + 1
+                        let k = Math.ceil(axisY / 20)
+                        let tickY = Math.ceil(axisY / k)
+                        while(true) {
+                            if(axisY % tickY == 0) {
+                                break
+                            } else {
+                                axisY += 1
+                            }
                         }
+                        tickY += 1
+
                         chartComp.maxAxisY = axisY
                         chartComp.tickCountY = tickY
                     } else {

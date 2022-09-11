@@ -101,7 +101,21 @@ Item {
 
                 onPositionChanged: {
                     let delta = bottomMouseScope.mouseY - clickPosBottom
-                    rectChart.height += delta
+                    if(delta > 0) {
+                        if((rectChart.height + delta) < (backgroundRectangle.height - (360 + rectChart.y))) {
+                            rectChart.height += delta
+                        } else {
+                            delta = (backgroundRectangle.height - (360 + rectChart.y)) - rectChart.height
+                            rectChart.height += delta
+                        }
+                    } else if (delta < 0) {
+                        if((rectChart.height + delta) > 300) {
+                            rectChart.height += delta
+                        } else {
+                            delta = 300 - rectChart.height
+                            rectChart.height += delta
+                        }
+                    }
                 }
             }
         }
@@ -130,8 +144,25 @@ Item {
 
                 onPositionChanged: {
                     let delta = topMouseScope.mouseY - clickPosTop
-                    rectChart.height -= delta
-                    rectChart.y += delta
+                    if(delta > 0) {
+                        if((rectChart.height - delta) > 300) {
+                            rectChart.height -= delta
+                            rectChart.y += delta
+                        } else {
+                            delta = rectChart.height - 300
+                            rectChart.height -= delta
+                            rectChart.y += delta
+                        }
+                    } else if(delta < 0) {
+                        if((rectChart.height - delta) < (360 + rectChart.y + rectChart.height)) {
+                            rectChart.height -= delta
+                            rectChart.y += delta
+                        } else {
+                            delta = rectChart.height - (360 + rectChart.y + rectChart.height)
+                            rectChart.height -= delta
+                            rectChart.y += delta
+                        }
+                    }
                 }
             }
         }
@@ -162,8 +193,25 @@ Item {
 
                 onPositionChanged: {
                     let delta = leftMouseScope.mouseX - clickPosLeft
-                    rectChart.width -= delta
-                    rectChart.x += delta
+                    if(delta > 0) {
+                        if((rectChart.width - delta) > 677) {
+                            rectChart.width -= delta
+                            rectChart.x += delta
+                        } else {
+                            delta = rectChart.width - 677
+                            rectChart.width -= delta
+                            rectChart.x += delta
+                        }
+                    } else if(delta < 0) {
+                        if((rectChart.width - delta) < (rectChart.x + rectChart.width)) {
+                            rectChart.width -= delta
+                            rectChart.x += delta
+                        } else {
+                            delta = rectChart.width - (rectChart.x + rectChart.width)
+                            rectChart.width -= delta
+                            rectChart.x += delta
+                        }
+                    }
                 }
             }
         }
@@ -192,7 +240,21 @@ Item {
 
                 onPositionChanged: {
                     let delta = rightMouseScope.mouseX - clickPosRight
-                    rectChart.width += delta
+                    if(delta > 0) {
+                        if((rectChart.width + delta) < (backgroundRectangle.width - rectChart.x)) {
+                            rectChart.width += delta
+                        } else {
+                            delta = (backgroundRectangle.width - rectChart.x) - rectChart.width
+                            rectChart.width += delta
+                        }
+                    } else if (delta < 0) {
+                        if((rectChart.width + delta) > 677) {
+                            rectChart.width += delta
+                        } else {
+                            delta = 677 - rectChart.width
+                            rectChart.width += delta
+                        }
+                    }
                 }
             }
         }
@@ -223,12 +285,50 @@ Item {
                 }
 
                 onPositionChanged: {
+
+                    //Верхняя область
                     let deltaY = topLeftMouseScope.mouseY - clickPosTop
+                    if(deltaY > 0) {
+                        if((rectChart.height - deltaY) > 300) {
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        } else {
+                            deltaY = rectChart.height - 300
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        }
+                    } else if(deltaY < 0) {
+                        if((rectChart.height - deltaY) < (360 + rectChart.y + rectChart.height)) {
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        } else {
+                            deltaY = rectChart.height - (360 + rectChart.y + rectChart.height)
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        }
+                    }
+
+                    //Левая область
                     let deltaX = topLeftMouseScope.mouseX - clickPosLeft
-                    rectChart.height -= deltaY
-                    rectChart.width -= deltaX
-                    rectChart.y += deltaY
-                    rectChart.x += deltaX
+                    if(deltaX > 0) {
+                        if((rectChart.width - deltaX) > 677) {
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        } else {
+                            deltaX = rectChart.width - 677
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        }
+                    } else if(deltaX < 0) {
+                        if((rectChart.width - deltaX) < (rectChart.x + rectChart.width)) {
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        } else {
+                            deltaX = rectChart.width - (rectChart.x + rectChart.width)
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        }
+                    }
                 }
             }
         }
@@ -259,11 +359,46 @@ Item {
                 }
 
                 onPositionChanged: {
+
+                    //Верхняя область
                     let deltaY = topRightMouseScope.mouseY - clickPosTop
+                    if(deltaY > 0) {
+                        if((rectChart.height - deltaY) > 300) {
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        } else {
+                            deltaY = rectChart.height - 300
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        }
+                    } else if(deltaY < 0) {
+                        if((rectChart.height - deltaY) < (360 + rectChart.y + rectChart.height)) {
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        } else {
+                            deltaY = rectChart.height - (360 + rectChart.y + rectChart.height)
+                            rectChart.height -= deltaY
+                            rectChart.y += deltaY
+                        }
+                    }
+
+                    //Правая область
                     let deltaX = topRightMouseScope.mouseX - clickPosRight
-                    rectChart.height -= deltaY
-                    rectChart.width += deltaX
-                    rectChart.y += deltaY
+                    if(deltaX > 0) {
+                        if((rectChart.width + deltaX) < (backgroundRectangle.width - rectChart.x)) {
+                            rectChart.width += deltaX
+                        } else {
+                            deltaX = (backgroundRectangle.width - rectChart.x) - rectChart.width
+                            rectChart.width += deltaX
+                        }
+                    } else if (deltaX < 0) {
+                        if((rectChart.width + deltaX) > 677) {
+                            rectChart.width += deltaX
+                        } else {
+                            deltaX = 677 - rectChart.width
+                            rectChart.width += deltaX
+                        }
+                    }
                 }
             }
         }
@@ -294,10 +429,42 @@ Item {
                 }
 
                 onPositionChanged: {
-                    let deltaY = bottomRightMouseScope.mouseY - clickPosBottom
+
+                    //Правая область
                     let deltaX = bottomRightMouseScope.mouseX - clickPosRight
-                    rectChart.height += deltaY
-                    rectChart.width += deltaX
+                    if(deltaX > 0) {
+                        if((rectChart.width + deltaX) < (backgroundRectangle.width - rectChart.x)) {
+                            rectChart.width += deltaX
+                        } else {
+                            deltaX = (backgroundRectangle.width - rectChart.x) - rectChart.width
+                            rectChart.width += deltaX
+                        }
+                    } else if (deltaX < 0) {
+                        if((rectChart.width + deltaX) > 677) {
+                            rectChart.width += deltaX
+                        } else {
+                            deltaX = 677 - rectChart.width
+                            rectChart.width += deltaX
+                        }
+                    }
+
+                    //Нижняя область
+                    let deltaY = bottomRightMouseScope.mouseY - clickPosBottom
+                    if(deltaY > 0) {
+                        if((rectChart.height + deltaY) < (backgroundRectangle.height - (360 + rectChart.y))) {
+                            rectChart.height += deltaY
+                        } else {
+                            deltaY = (backgroundRectangle.height - (360 + rectChart.y)) - rectChart.height
+                            rectChart.height += deltaY
+                        }
+                    } else if (deltaY < 0) {
+                        if((rectChart.height + deltaY) > 300) {
+                            rectChart.height += deltaY
+                        } else {
+                            deltaY = 300 - rectChart.height
+                            rectChart.height += deltaY
+                        }
+                    }
                 }
             }
         }
@@ -328,11 +495,46 @@ Item {
                 }
 
                 onPositionChanged: {
-                    let deltaX = bottomLeftMouseScope.mouseX - clickPosLeft
+
+                    //Нижняя область
                     let deltaY = bottomLeftMouseScope.mouseY - clickPosBottom
-                    rectChart.width -= deltaX
-                    rectChart.x += deltaX
-                    rectChart.height += deltaY
+                    if(deltaY > 0) {
+                        if((rectChart.height + deltaY) < (backgroundRectangle.height - (360 + rectChart.y))) {
+                            rectChart.height += deltaY
+                        } else {
+                            deltaY = (backgroundRectangle.height - (360 + rectChart.y)) - rectChart.height
+                            rectChart.height += deltaY
+                        }
+                    } else if (deltaY < 0) {
+                        if((rectChart.height + deltaY) > 300) {
+                            rectChart.height += deltaY
+                        } else {
+                            deltaY = 300 - rectChart.height
+                            rectChart.height += deltaY
+                        }
+                    }
+
+                    //Левая область
+                    let deltaX = bottomLeftMouseScope.mouseX - clickPosLeft
+                    if(deltaX > 0) {
+                        if((rectChart.width - deltaX) > 677) {
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        } else {
+                            deltaX = rectChart.width - 677
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        }
+                    } else if(deltaX < 0) {
+                        if((rectChart.width - deltaX) < (rectChart.x + rectChart.width)) {
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        } else {
+                            deltaX = rectChart.width - (rectChart.x + rectChart.width)
+                            rectChart.width -= deltaX
+                            rectChart.x += deltaX
+                        }
+                    }
                 }
             }
         }
