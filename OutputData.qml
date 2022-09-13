@@ -9,6 +9,7 @@ Item {
     property var columnScrollOutput_2: columnScrollOutput_2
     property var columnScrollOutput_3: columnScrollOutput_3
     property var columnScrollOutput_4: columnScrollOutput_4
+    property var columnScrollOutput_4_1: columnScrollOutput_4_1
     property var columnScrollOutput_5: columnScrollOutput_5
     property var columnScrollOutput_6: columnScrollOutput_6
     property var columnScrollOutput_7: columnScrollOutput_7
@@ -229,6 +230,44 @@ Item {
 
                                 Column {
                                     id: columnScrollOutput_4
+                                }
+                            }
+                        }
+                    }
+
+                    /*******************************************************************************************/
+
+                    //Колонка суммарных потерь напряжения
+                    /*******************************************************************************************/
+                    Item {
+                        width: 158
+                        height: 220
+
+                        Label {
+                            id: labelVoltageLossSum
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 5
+                            anchors.bottomMargin: 10
+                            text: qsTr("Потеря напр. суммарная, В")
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: labelVoltageLossSum.bottom
+                            color: "#e4e4e4"
+                            radius: 5
+
+                            ScrollView {
+                                x: 0
+                                y: 0
+                                width: 158
+                                height: 200
+
+                                Column {
+                                    id: columnScrollOutput_4_1
                                 }
                             }
                         }

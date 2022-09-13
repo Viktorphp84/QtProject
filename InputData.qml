@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import ParameterCalculation
 import QtCharts
 
-//import QtQml.Models
 Item {
     id: inputData
     width: widthItem
@@ -17,6 +16,9 @@ Item {
 
     property var parameterCalculation: parameterCalculation
     property alias numberOfConsumers: parameterCalculation.numberOfConsumers
+    property alias transformerResistance: textFieldTransformerResistance.text
+    property alias connectionDiagram: textFieldConnectionDiagram.text
+    property alias transformerPower: textFieldTransformerPower.text
 
     //signal signalEconomicSection(real economicSection)
 
@@ -280,13 +282,10 @@ Item {
                     outData.columnScrollOutput_8.children[sectionNumber].textField = String(
                                 parameterCalculation.resistancePhaseZero)
 
-                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {
-
-                        //проверка, что заполнены все строки
+                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {//проверка, что заполнены все строки
                         parameterCalculation.calculationSinglePhaseShortCircuit(
                                     root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
-                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit(
-                                ) //запись в вектор
+                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit() //запись в вектор
 
                         for (let i = 0; i < numberOfConsumers; ++i) {
                             outData.columnScrollOutput_9.children[i].textField = String(
@@ -304,8 +303,8 @@ Item {
                                     columnScroll_4.children[y].currentIndex, y)
                             sumVoltageLoss += voltageLoss
                             arrayVoltageLoss.push(sumVoltageLoss)
-                            outData.columnScrollOutput_4.children[y].textField = String(
-                                        voltageLoss)
+                            outData.columnScrollOutput_4.children[y].textField = String(voltageLoss)
+                            outData.columnScrollOutput_4_1.children[y].textField = String(sumVoltageLoss)
                             chartComp.lineSeries.append(y + 1, sumVoltageLoss)
                         }
                         maxValue = Math.max(...arrayVoltageLoss)
@@ -384,6 +383,7 @@ Item {
             outData.columnScrollOutput_2.children[n - 1].destroy()
             outData.columnScrollOutput_3.children[n - 1].destroy()
             outData.columnScrollOutput_4.children[n - 1].destroy()
+            outData.columnScrollOutput_4_1.children[n - 1].destrouy()
             outData.columnScrollOutput_5.children[n - 1].destroy()
             outData.columnScrollOutput_6.children[n - 1].destroy()
             outData.columnScrollOutput_7.children[n - 1].destroy()
@@ -408,6 +408,9 @@ Item {
                                        })
             componentLine.createObject(outData.columnScrollOutput_4, {
                                            "text": str
+                                       })
+            componentLine.createObject(outData.columnScrollOutput_4_1, {
+                                            "text": str
                                        })
             componentLine.createObject(outData.columnScrollOutput_5, {
                                            "text": str,
@@ -794,58 +797,80 @@ Item {
                     width: 309
                     height: 122
                     anchors.centerIn: parent
-                }
-
-                Label {
-                    id: label16
-                    anchors.top: parent.top
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: qsTr("Питающий трансформатор")
-                    font.pointSize: 14
-                }
-
-                GridLayout {
-                    anchors.top: label16.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.leftMargin: 5
-                    rows: 2
-                    columns: 2
 
                     Label {
-                        id: label8
-                        text: qsTr("Схема соединения обмоток")
+                        id: labelPowerTransformer
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Питающий трансформатор")
+                        font.pointSize: 14
                     }
 
-                    ComboBox {
-                        id: comboBox1
+                    GridLayout {
+                        anchors.top: labelPowerTransformer.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.leftMargin: 5
+                        anchors.rightMargin: 5
+                        rows: 2
+                        columns: 2
 
-                        model: ListModel {
-                            id: comboSchemeConnectModel
+                        Label {
+                            id: labelConnectionDiagram
+                            text: qsTr("Схема соединения обмоток")
+                        }
 
-                            ListElement {
-                                name: "Y/Y0"
+                        TextField {
+                            id: textFieldConnectionDiagram
+                            placeholderText: qsTr("Y/Y0")
+                            Layout.maximumWidth: 80
+                            readOnly: true
+                        }
+
+                        Label {
+                            id: labelTransformerResistance
+                            text: qsTr("Сопротивление трансформатора, Ом")
+                        }
+
+                        TextField {
+                            id: textFieldTransformerResistance
+                            placeholderText: qsTr("0")
+                            Layout.maximumWidth: 80
+                            readOnly: true
+                        }
+
+                        /*ComboBox {
+                            id: comboBox1
+
+                            model: ListModel {
+                                id: comboSchemeConnectModel
+
+                                ListElement {
+                                    name: "Y/Y0"
+                                }
+                                ListElement {
+                                    name: "Y/Z0"
+                                }
+                                ListElement {
+                                    name: "\u0394/Y0"
+                                }
                             }
-                            ListElement {
-                                name: "Y/Z0"
-                            }
-                            ListElement {
-                                name: "\u0394/Y0"
-                            }
+                        }*/
+
+                        Label {
+                            id: labelTransformerPower
+                            text: qsTr("Мощность трансформатора, кВа")
+                        }
+
+                        TextField {
+                            id: textFieldTransformerPower
+                            placeholderText: qsTr("0")
+                            Layout.maximumWidth: 80
+                            readOnly: true
                         }
                     }
-
-                    Label {
-                        id: label9
-                        text: qsTr("Мощность трансформатора")
-                    }
-
-                    TextField {
-                        id: textField2
-                        placeholderText: qsTr("0")
-                    }
-                }
+                }               
             }
             /**********************************************************************************************************/
 

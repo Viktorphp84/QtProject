@@ -113,3 +113,7 @@ void C_Model::setDefaultModel() {
     endResetModel();
 }
 
+double C_Model::getTransformerPower(int index) {
+    int column = qFloor(index / 4);
+    return dataModel.Data_C_Model::getData(column, 0);
+}

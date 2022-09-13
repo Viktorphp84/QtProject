@@ -20,14 +20,7 @@ int main(int argc, char *argv[])
         if (!obj && url == objUrl)
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
-    /*QLocale systemLocale = QLocale::system();
-    systemLocale.setNumberOptions(QLocale::IncludeTrailingZeroesAfterDot);
-    QLocale::setDefault(systemLocale);*/
     engine.load(url);
-
-    /*QList<QObject*> listChild = engine.rootObjects();
-    QObject* child = listChild[0];
-    QObject* comboBox = child->findChild<QObject*>("comboBox");*/
 
     return app.exec();
 }

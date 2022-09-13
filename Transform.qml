@@ -229,7 +229,17 @@ Item {
                             for (var i = 0; i < root.componentCardsApp.length; ++i) {
                                 root.componentCardsApp[i].componentOutput.resistanceTransformer
                                         = display
+                                root.componentCardsApp[i].componentInput.transformerResistance = display
+                                if((index + 1) % 2 == 0 && (index + 1) % 4 != 0 ) {
+                                    root.componentCardsApp[i].componentInput.connectionDiagram = "Y/Y0"
+                                } else if(index % 2 == 0 && index % 4 != 0) {
+                                    root.componentCardsApp[i].componentInput.connectionDiagram = "Y/Z0"
+                                } else if ((index + 1) % 4 == 0 && (index + 1) % 2 == 0) {
+                                    root.componentCardsApp[i].componentInput.connectionDiagram = "\u0394/Y0"
+                                }
+                                root.componentCardsApp[i].componentInput.transformerPower = String(c_model.getTransformerPower(index))
                             }
+
                             calcSinglePhaseShortCircuit()
                         } else {
                             //вывод сообщения о выборе правильной ячейки

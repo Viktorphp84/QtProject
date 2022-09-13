@@ -33,6 +33,7 @@ public:
     Q_INVOKABLE void deleteColumn(int);
     Q_INVOKABLE void writeData(int, QString);
     Q_INVOKABLE void setDefaultModel();
+    Q_INVOKABLE double getTransformerPower(int);
 };
 
 #endif // C_MODEL_H
