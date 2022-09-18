@@ -94,10 +94,17 @@ void ParameterCalculation::calculationOfLoadsBySections() {
 
 void ParameterCalculation::clearVectors() {
     m_vecActivLoad.clear();
-    m_vecActivPowerCoefficient.clear();
     m_vecLengthSite.clear();
+    m_vecActivPowerCoefficient.clear();
     m_vecSiteLoads.clear();
     m_vecWeightedAverageCoefficient.clear();
+    m_vecFullPower.clear();
+    m_vecEquivalentPower.clear();
+    m_vecEquivalentCurrent.clear();
+    m_vecResistancePhaseZero.clear();
+    m_vecSinglePhaseShortCircuit.clear();
+    m_vecVoltageLoss.clear();
+    m_vecDesignCurrent.clear();
 }
 
 void ParameterCalculation::calculationWeightedAverage() {
@@ -123,6 +130,7 @@ void ParameterCalculation::parameterCalculation() {
     calculationWeightedAverage();
     calculationOfLoadsBySections();
     calculationFullPower();
+    calculationDesignCurrent();
     calculationEquivalentPower();
     calculationEquivalentCurrent();
 }
@@ -246,4 +254,15 @@ double ParameterCalculation::calculationVoltageLoss(const int currentIndex, cons
     double sin = qSqrt(1 - qPow(m_vecWeightedAverageCoefficient[numberSection], 2));
     double voltageLoss = (m_vecFullPower[numberSection] * (m_vecResistanceWire[currentIndex].activResistancePhase * m_vecWeightedAverageCoefficient[numberSection] + m_vecResistanceWire[currentIndex].reactancePhase * sin) * m_vecLengthSite[numberSection]) / 0.38;
     return voltageLoss;
+}
+
+void ParameterCalculation::calculationDesignCurrent() {
+    for(int i = 0; i < m_numberOfConsumers; ++i) {
+        double designCurrent = m_vecFullPower[i] / (qSqrt(3) * 0.38);
+        m_vecDesignCurrent.push_back(designCurrent);
+    }
+}
+
+QVector<double> ParameterCalculation::getVecDesignCurrent() const {
+    return m_vecDesignCurrent;
 }

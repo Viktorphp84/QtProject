@@ -5,16 +5,17 @@ import QtQuick.Controls
 Item {
     id: outputData
 
-    property var columnScrollOutput_1: columnScrollOutput_1
-    property var columnScrollOutput_2: columnScrollOutput_2
-    property var columnScrollOutput_3: columnScrollOutput_3
-    property var columnScrollOutput_4: columnScrollOutput_4
-    property var columnScrollOutput_4_1: columnScrollOutput_4_1
-    property var columnScrollOutput_5: columnScrollOutput_5
-    property var columnScrollOutput_6: columnScrollOutput_6
-    property var columnScrollOutput_7: columnScrollOutput_7
-    property var columnScrollOutput_8: columnScrollOutput_8
-    property var columnScrollOutput_9: columnScrollOutput_9
+    property var columnScrollOutput_1: columnScrollOutput_1     //активная мощность
+    property var columnScrollOutput_2: columnScrollOutput_2     //полная мощность
+    property var columnScrollOutput_3: columnScrollOutput_3     //косинус средневзвешенный
+    property var columnScrollOutput_3_1: columnScrollOutput_3_1 //расчетный ток
+    property var columnScrollOutput_4: columnScrollOutput_4     //потеря напряжения
+    property var columnScrollOutput_4_1: columnScrollOutput_4_1 //потеря напряжения суммарная
+    property var columnScrollOutput_5: columnScrollOutput_5     //эквивалентная мощность
+    property var columnScrollOutput_6: columnScrollOutput_6     //эквивалентный ток
+    property var columnScrollOutput_7: columnScrollOutput_7     //экономическое сечение
+    property var columnScrollOutput_8: columnScrollOutput_8     //сопротивление петли-фаза ноль
+    property var columnScrollOutput_9: columnScrollOutput_9     //однофазное КЗ
 
     property alias resistanceTransformer: textFieldResistanseTransform.text
 
@@ -192,6 +193,44 @@ Item {
 
                                 Column {
                                     id: columnScrollOutput_3
+                                }
+                            }
+                        }
+                    }
+
+                    /*******************************************************************************************/
+
+                    //Колонка расчетных токов на учасках
+                    /*******************************************************************************************/
+                    Item {
+                        width: 158
+                        height: 220
+
+                        Label {
+                            id: labelDesignCurrent
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 5
+                            anchors.bottomMargin: 10
+                            text: qsTr("Расчетный ток, А")
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: labelDesignCurrent.bottom
+                            color: "#e4e4e4"
+                            radius: 5
+
+                            ScrollView {
+                                x: 0
+                                y: 0
+                                width: 158
+                                height: 200
+
+                                Column {
+                                    id: columnScrollOutput_3_1
                                 }
                             }
                         }

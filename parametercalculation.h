@@ -13,17 +13,18 @@ class ParameterCalculation : public QObject
     Q_PROPERTY(double economicSection MEMBER m_economicSection)
     Q_PROPERTY(double resistancePhaseZero MEMBER m_resistancePhaseZero)
 
-    QVector<double> m_vecActivLoad;//вектор активных нагрузок
-    QVector<double> m_vecLengthSite;//вектор длин участков
-    QVector<double> m_vecActivPowerCoefficient;//вектор коэф. активных мощностей
-    QVector<double> m_vecSiteLoads;//вектор нагрузок по участкам
+    QVector<double> m_vecActivLoad;                 //вектор активных нагрузок
+    QVector<double> m_vecLengthSite;                //вектор длин участков
+    QVector<double> m_vecActivPowerCoefficient;     //вектор коэф. активных мощностей
+    QVector<double> m_vecSiteLoads;                 //вектор нагрузок по участкам
     QVector<double> m_vecWeightedAverageCoefficient;//вектор средневзвешенных коэф. на участках
-    QVector<double> m_vecFullPower;//вектор полных мощностей
-    QVector<double> m_vecEquivalentPower;//вектор эквивалентных мощностей
-    QVector<double> m_vecEquivalentCurrent;//вектор эквивалентных токов
-    QVector<double> m_vecResistancePhaseZero;//вектор сопротивлений фаза-ноль
-    QVector<double> m_vecSinglePhaseShortCircuit;//вектор однофазных КЗ по участкам
-    QVector<double> m_vecVoltageLoss;//вектор потерь напряжения
+    QVector<double> m_vecFullPower;                 //вектор полных мощностей
+    QVector<double> m_vecEquivalentPower;           //вектор эквивалентных мощностей
+    QVector<double> m_vecEquivalentCurrent;         //вектор эквивалентных токов
+    QVector<double> m_vecResistancePhaseZero;       //вектор сопротивлений фаза-ноль
+    QVector<double> m_vecSinglePhaseShortCircuit;   //вектор однофазных КЗ по участкам
+    QVector<double> m_vecVoltageLoss;               //вектор потерь напряжения
+    QVector<double> m_vecDesignCurrent;             //вектор расчетных токов
 
     int m_numberOfConsumers = 0;
     double m_Pmax = 0;
@@ -175,31 +176,33 @@ class ParameterCalculation : public QObject
 public:
     ParameterCalculation();
 
-    Q_INVOKABLE void setVecActivLoad(double);//добавление значения в вектор нагрузок
-    Q_INVOKABLE void setVecLengthSite(double);//добавление занчения в вектор длин участков
-    Q_INVOKABLE void setActivPowerCoefficient(double);//добавление заначения в вектор коэф. активной мощности
-    Q_INVOKABLE void clearVectors();//очистка всех векторов
-    Q_INVOKABLE void parameterCalculation();//основная функция из которой расчитываются все параметры сети
-    Q_INVOKABLE QVector<double> getVecSiteLoads() const;//получить вектор m_vecSiteLoad
-    Q_INVOKABLE QVector<double> getVecWeightedAverage() const;//получить вектор средневзвешенных косинусов
-    Q_INVOKABLE QVector<double> getVecFullPower() const;//получить вектор полных мощностей
-    Q_INVOKABLE QVector<double> getVecEquivalentPower() const;//получить вектор эквивалентных мощностей
-    Q_INVOKABLE QVector<double> getVecEquivalentCurrent() const;//получить вектор эквивалентных токов
-    Q_INVOKABLE QVector<double> getVecSinglePhaseShortCircuit() const;//получить вектор однофазных КЗ
+    Q_INVOKABLE void setVecActivLoad(double);                            //добавление значения в вектор нагрузок
+    Q_INVOKABLE void setVecLengthSite(double);                           //добавление занчения в вектор длин участков
+    Q_INVOKABLE void setActivPowerCoefficient(double);                   //добавление заначения в вектор коэф. активной мощности
+    Q_INVOKABLE void clearVectors();                                     //очистка всех векторов
+    Q_INVOKABLE void parameterCalculation();                             //основная функция из которой расчитываются все параметры сети
+    Q_INVOKABLE QVector<double> getVecSiteLoads() const;                 //получить вектор m_vecSiteLoad
+    Q_INVOKABLE QVector<double> getVecWeightedAverage() const;           //получить вектор средневзвешенных косинусов
+    Q_INVOKABLE QVector<double> getVecFullPower() const;                 //получить вектор полных мощностей
+    Q_INVOKABLE QVector<double> getVecEquivalentPower() const;           //получить вектор эквивалентных мощностей
+    Q_INVOKABLE QVector<double> getVecEquivalentCurrent() const;         //получить вектор эквивалентных токов
+    Q_INVOKABLE QVector<double> getVecSinglePhaseShortCircuit() const;   //получить вектор однофазных КЗ
+    Q_INVOKABLE QVector<double> getVecDesignCurrent() const;             //получить вектор расчетных токов
     Q_INVOKABLE void calculationEconomicSection(const double, const int);//расчет экономического сечения
     Q_INVOKABLE void calculationResistancePhaseZero(const int, const int);/* метод принимает
     значения активного и реактивного сопротивлений фазного и нулевго проводов и рассчитывае сопротивление петли фаза-ноль*/
-    Q_INVOKABLE void calculationSinglePhaseShortCircuit(const double);//расчет однофазных КЗ
-    Q_INVOKABLE void fillingResistanceVectorPhaseZero();//заполнение вектора сопротивления петли фаза-ноль значением -1
-    Q_INVOKABLE bool checkResistanceVectorPhaseZero();//проверка вектора сопротивления петли фаза-ноль на наличие значения -1
-    Q_INVOKABLE double calculationVoltageLoss(const int, const int);//расчет потерь напряжения
+    Q_INVOKABLE void calculationSinglePhaseShortCircuit(const double);   //расчет однофазных КЗ
+    Q_INVOKABLE void fillingResistanceVectorPhaseZero();                 //заполнение вектора сопротивления петли фаза-ноль значением -1
+    Q_INVOKABLE bool checkResistanceVectorPhaseZero();                   //проверка вектора сопротивления петли фаза-ноль на наличие значения -1
+    Q_INVOKABLE double calculationVoltageLoss(const int, const int);     //расчет потерь напряжения
 
-    bool isMoreThenFourTimes(int);//определение отличия нагрузок
-    void calculationWeightedAverage();//расчет средневзвешенных косинусов по участкам
+    bool isMoreThenFourTimes(int);      //определение отличия нагрузок
+    void calculationWeightedAverage();  //расчет средневзвешенных косинусов по участкам
     void calculationOfLoadsBySections();//расчет нагрузок по участкам
-    void calculationFullPower();//расчет полной мощности
-    void calculationEquivalentPower();//расчет эквивалентной мощности
+    void calculationFullPower();        //расчет полной мощности
+    void calculationEquivalentPower();  //расчет эквивалентной мощности
     void calculationEquivalentCurrent();//расчет эквивалентных токов
+    void calculationDesignCurrent();    //вычисление расчетного тока
 
 
     template<typename type>

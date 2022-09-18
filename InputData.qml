@@ -376,12 +376,18 @@ Item {
 
     //Функция для загрузки строк в колонки отображения результатов
     /*******************************************************************************************************/
-    function loadOutputLine(vectorSiteLoads, vectorWeightedAverage, vectorFullPower, vectorEquivalentPower, vectorEquivalentCurrent) {
-        let n
-        for (n = outData.columnScrollOutput_1.children.length; n > 0; --n) {
+    function loadOutputLine(vectorSiteLoads
+                            , vectorWeightedAverage
+                            , vectorFullPower
+                            , vectorEquivalentPower
+                            , vectorEquivalentCurrent
+                            , vectorDesignCurrent) {
+
+        for (let n = outData.columnScrollOutput_1.children.length; n > 0; --n) {
             outData.columnScrollOutput_1.children[n - 1].destroy()
             outData.columnScrollOutput_2.children[n - 1].destroy()
             outData.columnScrollOutput_3.children[n - 1].destroy()
+            outData.columnScrollOutput_3_1.children[n - 1].destroy()
             outData.columnScrollOutput_4.children[n - 1].destroy()
             outData.columnScrollOutput_4_1.children[n - 1].destrouy()
             outData.columnScrollOutput_5.children[n - 1].destroy()
@@ -391,8 +397,7 @@ Item {
             outData.columnScrollOutput_9.children[n - 1].destroy()
         }
 
-        let i
-        for (i = 0; i < numberOfConsumers; ++i) {
+        for (let i = 0; i < numberOfConsumers; ++i) {
             let str = "№" + (i + 1)
             componentLine.createObject(outData.columnScrollOutput_1, {
                                            "text": str,
@@ -405,6 +410,10 @@ Item {
             componentLine.createObject(outData.columnScrollOutput_3, {
                                            "text": str,
                                            "textField": vectorWeightedAverage[i]
+                                       })
+            componentLine.createObject(outData.columnScrollOutput_3_1, {
+                                           "text": str,
+                                           "textField": vectorDesignCurrent[i]
                                        })
             componentLine.createObject(outData.columnScrollOutput_4, {
                                            "text": str
@@ -654,11 +663,12 @@ Item {
                     let vectorSiteLoads = parameterCalculation.getVecSiteLoads()
                     let vectorWeightedAverage = parameterCalculation.getVecWeightedAverage()
                     let vectorFullPower = parameterCalculation.getVecFullPower()
+                    let vectorDesignCurrent = parameterCalculation.getVecDesignCurrent()
                     let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
                     let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
                     loadOutputLine(vectorSiteLoads, vectorWeightedAverage,
                                    vectorFullPower, vectorEquivalentPower,
-                                   vectorEquivalentCurrent)
+                                   vectorEquivalentCurrent, vectorDesignCurrent)
                 }
             }
 
@@ -896,66 +906,107 @@ Item {
                 Label {
                     id: label17
                     anchors.top: parent.top
+                    anchors.topMargin: -20
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Двигатель")
                     font.pointSize: 14
                 }
 
-                GridLayout {
-                    anchors.top: label17.bottom
+                /*********************************************************/
+                Label {
+                    id: label10
                     anchors.left: parent.left
+                    anchors.top: label17.bottom
+                    anchors.topMargin: 10
+                    text: qsTr("Мощность двигателя, кВт")
+                }
+
+                TextField {
+                    id: textField3
                     anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    rows: 5
-                    columns: 2
+                    anchors.verticalCenter:label10.verticalCenter
+                    anchors.rightMargin: 5
+                    placeholderText: qsTr("0")
+                }
 
-                    Label {
-                        id: label10
-                        text: qsTr("Мощность двигателя")
-                    }
+                /*********************************************************/
+                Label {
+                    id: label11
+                    anchors.left: parent.left
+                    anchors.top: label10.bottom
+                    anchors.topMargin: 10
+                    text: qsTr("КПД двигателя в ед.")
+                }
 
-                    TextField {
-                        id: textField3
-                        placeholderText: qsTr("0")
-                    }
+                TextField {
+                    id: textField4
+                    anchors.right: parent.right
+                    anchors.verticalCenter: label11.verticalCenter
+                    anchors.rightMargin: 5
+                    placeholderText: qsTr("0")
+                }
 
-                    Label {
-                        id: label11
-                        text: qsTr("КПД двигателя в ед.")
-                    }
+                /*********************************************************/
+                Label {
+                    id: label12
+                    anchors.left: parent.left
+                    anchors.top: label11.bottom
+                    anchors.topMargin: 10
+                    text: qsTr("Cos двигателя")
+                }
 
-                    TextField {
-                        id: textField4
-                        placeholderText: qsTr("0")
-                    }
+                TextField {
+                    id: textField5
+                    anchors.right: parent.right
+                    anchors.verticalCenter: label12.verticalCenter
+                    anchors.rightMargin: 5
+                    placeholderText: qsTr("0")
+                }
 
-                    Label {
-                        id: label12
-                        text: qsTr("Cos двигателя")
-                    }
+                /*********************************************************/
+                Label {
+                    id: label13
+                    anchors.left: parent.left
+                    anchors.top: label12.bottom
+                    anchors.topMargin: 10
+                    text: qsTr("Кратность пускового тока")
+                }
 
-                    TextField {
-                        id: textField5
-                        placeholderText: qsTr("0")
-                    }
+                TextField {
+                    id: textField6
+                    anchors.right: parent.right
+                    anchors.verticalCenter: label13.verticalCenter
+                    anchors.rightMargin: 5
+                    placeholderText: qsTr("0")
+                }
 
-                    Label {
-                        id: label13
-                        text: qsTr("Кратность пускового тока")
-                    }
+                /*********************************************************/
+                Label {
+                    id: label14
+                    anchors.left: parent.left
+                    anchors.top: label13.bottom
+                    anchors.topMargin: 10
+                    text: qsTr("Тип двигателя")
+                }
 
-                    TextField {
-                        id: textField6
-                        placeholderText: qsTr("0")
-                    }
+                ComboBox {
+                    id: comboBox
+                    anchors.right: parent.right
+                    anchors.verticalCenter: label14.verticalCenter
+                    anchors.rightMargin: 5
+                    width: 220
 
-                    Label {
-                        id: label14
-                        text: qsTr("Тип двигателя")
-                    }
+                    model: [
+                        "Короткозамкнутый ротор, до 5с",
+                        "Короткозамкнутый ротор, до 10с",
+                        "Фазный ротор "
+                    ]
 
-                    ComboBox {
-                        id: comboBox2
+                    delegate: ItemDelegate {
+                        width: comboBox.width
+                        Text {
+                            text: qsTr(modelData)
+                        }
                     }
                 }
             }
