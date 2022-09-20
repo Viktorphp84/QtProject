@@ -41,7 +41,7 @@ bool ParameterCalculation::isMoreThenFourTimes(int currentPosition) {
 }
 
 //Расчет нагрузок по участкам
-void ParameterCalculation::calculationOfLoadsBySections() {
+bool ParameterCalculation::calculationOfLoadsBySections() {
     for(int i = 0; i < m_numberOfConsumers; ++i)
     {
         //Если введенная нагрузка более 300кВт выводим сообщение
@@ -49,7 +49,7 @@ void ParameterCalculation::calculationOfLoadsBySections() {
         {
             emit signalToQml();
 
-            return;
+            return 0;
         }
 
         if(!isMoreThenFourTimes(i)) {
@@ -90,6 +90,7 @@ void ParameterCalculation::calculationOfLoadsBySections() {
             m_vecSiteLoads.push_back(Psum);
         }
     }
+    return 1;
 }
 
 void ParameterCalculation::clearVectors() {
@@ -105,6 +106,7 @@ void ParameterCalculation::clearVectors() {
     m_vecSinglePhaseShortCircuit.clear();
     m_vecVoltageLoss.clear();
     m_vecDesignCurrent.clear();
+    m_vecDesignCurrentConsumer.clear();
 }
 
 void ParameterCalculation::calculationWeightedAverage() {
@@ -126,13 +128,17 @@ void ParameterCalculation::calculationWeightedAverage() {
     m_vecWeightedAverageCoefficient.push_back(m_vecActivPowerCoefficient[m_numberOfConsumers - 1]);
 }
 
-void ParameterCalculation::parameterCalculation() {
+bool ParameterCalculation::parameterCalculation() {
     calculationWeightedAverage();
-    calculationOfLoadsBySections();
-    calculationFullPower();
-    calculationDesignCurrent();
-    calculationEquivalentPower();
-    calculationEquivalentCurrent();
+    if(calculationOfLoadsBySections()) {
+        calculationFullPower();
+        calculationDesignCurrent();
+        calculationDesignCurrentConsumer();
+        calculationEquivalentPower();
+        calculationEquivalentCurrent();
+        return 1;
+    }
+    return 0;
 }
 
 /*В функцию передается словарь для расчета коэф. одновременности или добавок
@@ -218,9 +224,9 @@ void ParameterCalculation::calculationEconomicSection(const double economicCurre
 void ParameterCalculation::calculationResistancePhaseZero(const int currentIndex, const int sectionNumber) {
     double squareActivResistance = qPow((m_vecResistanceWire[currentIndex].activResistancePhase
                                          + m_vecResistanceWire[currentIndex].activResistanceZero), 2);
-    double squaReactance = qPow((m_vecResistanceWire[currentIndex].reactancePhase
+    double squareReactance = qPow((m_vecResistanceWire[currentIndex].reactancePhase
                                  + m_vecResistanceWire[currentIndex].reactanceZero), 2);
-    m_resistancePhaseZero = m_vecLengthSite[sectionNumber] * qSqrt(squareActivResistance + squaReactance);
+    m_resistancePhaseZero = m_vecLengthSite[sectionNumber] * qSqrt(squareActivResistance + squareReactance);
     m_vecResistancePhaseZero[sectionNumber] = m_resistancePhaseZero;
 }
 
@@ -236,6 +242,7 @@ void ParameterCalculation::calculationSinglePhaseShortCircuit(const double trans
 }
 
 void ParameterCalculation::fillingResistanceVectorPhaseZero() {
+    m_vecResistancePhaseZero.clear();
     for(int i = 0; i < m_numberOfConsumers; ++i) {
         m_vecResistancePhaseZero.push_back(-1);
     }
@@ -265,4 +272,15 @@ void ParameterCalculation::calculationDesignCurrent() {
 
 QVector<double> ParameterCalculation::getVecDesignCurrent() const {
     return m_vecDesignCurrent;
+}
+
+void ParameterCalculation::calculationDesignCurrentConsumer() {
+    for(int i = 0; i < m_numberOfConsumers; ++i) {
+        double designCurrentConsumer = m_vecActivLoad[i] / (qSqrt(3) * 0.38 * m_vecWeightedAverageCoefficient[i]);
+        m_vecDesignCurrentConsumer.push_back(designCurrentConsumer);
+    }
+}
+
+QVector<double> ParameterCalculation::getVecDesignCurrentConsumer() const {
+    return m_vecDesignCurrentConsumer;
 }

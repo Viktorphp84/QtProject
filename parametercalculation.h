@@ -24,7 +24,8 @@ class ParameterCalculation : public QObject
     QVector<double> m_vecResistancePhaseZero;       //вектор сопротивлений фаза-ноль
     QVector<double> m_vecSinglePhaseShortCircuit;   //вектор однофазных КЗ по участкам
     QVector<double> m_vecVoltageLoss;               //вектор потерь напряжения
-    QVector<double> m_vecDesignCurrent;             //вектор расчетных токов
+    QVector<double> m_vecDesignCurrent;             //вектор расчетных токов участков
+    QVector<double> m_vecDesignCurrentConsumer;     //вектор расчетных токов нагрузок
 
     int m_numberOfConsumers = 0;
     double m_Pmax = 0;
@@ -180,14 +181,15 @@ public:
     Q_INVOKABLE void setVecLengthSite(double);                           //добавление занчения в вектор длин участков
     Q_INVOKABLE void setActivPowerCoefficient(double);                   //добавление заначения в вектор коэф. активной мощности
     Q_INVOKABLE void clearVectors();                                     //очистка всех векторов
-    Q_INVOKABLE void parameterCalculation();                             //основная функция из которой расчитываются все параметры сети
+    Q_INVOKABLE bool parameterCalculation();                             //основная функция из которой расчитываются все параметры сети
     Q_INVOKABLE QVector<double> getVecSiteLoads() const;                 //получить вектор m_vecSiteLoad
     Q_INVOKABLE QVector<double> getVecWeightedAverage() const;           //получить вектор средневзвешенных косинусов
     Q_INVOKABLE QVector<double> getVecFullPower() const;                 //получить вектор полных мощностей
     Q_INVOKABLE QVector<double> getVecEquivalentPower() const;           //получить вектор эквивалентных мощностей
     Q_INVOKABLE QVector<double> getVecEquivalentCurrent() const;         //получить вектор эквивалентных токов
     Q_INVOKABLE QVector<double> getVecSinglePhaseShortCircuit() const;   //получить вектор однофазных КЗ
-    Q_INVOKABLE QVector<double> getVecDesignCurrent() const;             //получить вектор расчетных токов
+    Q_INVOKABLE QVector<double> getVecDesignCurrent() const;             //получить вектор расчетных токов участков
+    Q_INVOKABLE QVector<double> getVecDesignCurrentConsumer() const;     //получить вектор расчетных токов нагрузок
     Q_INVOKABLE void calculationEconomicSection(const double, const int);//расчет экономического сечения
     Q_INVOKABLE void calculationResistancePhaseZero(const int, const int);/* метод принимает
     значения активного и реактивного сопротивлений фазного и нулевго проводов и рассчитывае сопротивление петли фаза-ноль*/
@@ -196,13 +198,14 @@ public:
     Q_INVOKABLE bool checkResistanceVectorPhaseZero();                   //проверка вектора сопротивления петли фаза-ноль на наличие значения -1
     Q_INVOKABLE double calculationVoltageLoss(const int, const int);     //расчет потерь напряжения
 
-    bool isMoreThenFourTimes(int);      //определение отличия нагрузок
-    void calculationWeightedAverage();  //расчет средневзвешенных косинусов по участкам
-    void calculationOfLoadsBySections();//расчет нагрузок по участкам
-    void calculationFullPower();        //расчет полной мощности
-    void calculationEquivalentPower();  //расчет эквивалентной мощности
-    void calculationEquivalentCurrent();//расчет эквивалентных токов
-    void calculationDesignCurrent();    //вычисление расчетного тока
+    bool isMoreThenFourTimes(int);          //определение отличия нагрузок
+    void calculationWeightedAverage();      //расчет средневзвешенных косинусов по участкам
+    bool calculationOfLoadsBySections();    //расчет нагрузок по участкам
+    void calculationFullPower();            //расчет полной мощности
+    void calculationEquivalentPower();      //расчет эквивалентной мощности
+    void calculationEquivalentCurrent();    //расчет эквивалентных токов
+    void calculationDesignCurrent();        //вычисление расчетного тока на участках
+    void calculationDesignCurrentConsumer();//вычисление расчетного тока нагрузок
 
 
     template<typename type>

@@ -225,10 +225,9 @@ Item {
                         if (index % 4) {
                             transCard.transformerResistance = parseFloat(
                                         display)
-                            //root.componentCardsApp.componentOutput.resistanceTransformer = display
+
                             for (var i = 0; i < root.componentCardsApp.length; ++i) {
-                                root.componentCardsApp[i].componentOutput.resistanceTransformer
-                                        = display
+
                                 root.componentCardsApp[i].componentInput.transformerResistance = display
                                 if((index + 1) % 2 == 0 && (index + 1) % 4 != 0 ) {
                                     root.componentCardsApp[i].componentInput.connectionDiagram = "Y/Y0"

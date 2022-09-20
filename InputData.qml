@@ -19,6 +19,118 @@ Item {
     property alias transformerResistance: textFieldTransformerResistance.text
     property alias connectionDiagram: textFieldConnectionDiagram.text
     property alias transformerPower: textFieldTransformerPower.text
+    property double sumDesignCurrentConsumer: 0
+    property double startingCurrentRatio: 0
+    property double engineType: 0
+    property double startingCurrent: 0
+
+    //Соединение с сигналов из класса C++ ParameterCalculation
+    /*******************************************************************************************************/
+    Connections {
+        target: parameterCalculation
+        function onSignalToQml() {
+            dialogLoadOver_300.visible = true
+        }
+    }
+    /*******************************************************************************************************/
+
+    //Расчет параметров двигателя
+    /*******************************************************************************************************/
+    function engineCalculation() {
+        let enginePower = Number(textFieldEnginePower.text)
+        let efficiencyFactor = Number(textFieldEfficiencyFactor.text)
+        let engineCos = Number(textFieldEngineCos.text)
+        let startingCurrentRatio = Number(textFieldStartingCurrentRatio.text)
+        inputData.startingCurrentRatio = startingCurrentRatio
+        let engineType = Number(comboBoxEngineType.currentIndex)
+
+        switch(engineType) {
+        case 0: engineType = 2.5
+            break
+        case 1: engineType = 1.6
+            break
+        case 2: engineType = 0.9
+            break
+        default: engineType = 0
+        }
+
+        inputData.engineType = engineType
+
+        if(enginePower && efficiencyFactor && engineCos && startingCurrentRatio) {
+            let ratedEngineCurrent = enginePower / (Math.sqrt(3) * engineCos * 0.38 * efficiencyFactor)
+            outData.ratedEngineCurrent = String(ratedEngineCurrent)
+            let startingCurrent = startingCurrentRatio * ratedEngineCurrent
+            inputData.startingCurrent = startingCurrent
+            outData.startingCurrent = String(startingCurrent)
+            fuseCalculation()
+        }
+    }
+    /*******************************************************************************************************/
+
+    //Расчет предохранителя
+    /*******************************************************************************************************/
+    function fuseCalculation() {
+
+        let k = numberOfConsumers >= 3 ? 0.9 : 1
+        let temp
+        if(inputData.engineType) {
+            temp = k * inputData.sumDesignCurrentConsumer + inputData.startingCurrent / inputData.engineType
+        } else {
+            temp = k * inputData.sumDesignCurrentConsumer
+        }
+
+        let arrayRatedCurrentFuse = [2, 4, 6.3, 10, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160,
+                                     200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500]
+
+        let fuseRatingTemp = inputData.sumDesignCurrentConsumer >= temp ? inputData.sumDesignCurrentConsumer : temp
+        let fuseRating = 0
+
+        for(let i = 0; i < arrayRatedCurrentFuse.length - 1; ++i) {
+            if((fuseRatingTemp > arrayRatedCurrentFuse[i]) && (fuseRatingTemp <= arrayRatedCurrentFuse[i + 1])) {
+                fuseRating = arrayRatedCurrentFuse[i + 1]
+            }
+        }
+
+        if(!fuseRating) {
+            dialogWarning.title = "Превышен максимальный номинал предохранителя!"
+            dialogWarning.visible = true
+        }
+
+        outData.fuseRating = fuseRating
+    }
+    /*******************************************************************************************************/
+
+    //Расчет секционирующих пунктов
+    /*******************************************************************************************************/
+    function calculationRecloser() {
+
+    }
+    /*******************************************************************************************************/
+
+    //Очистка данных и полей
+    /*******************************************************************************************************/
+    function dataCleaning() {
+
+        for (let n = outData.columnScrollOutput_1.children.length; n > 0; --n) {
+            outData.columnScrollOutput_1.children[n - 1].destroy()
+            outData.columnScrollOutput_2.children[n - 1].destroy()
+            outData.columnScrollOutput_3.children[n - 1].destroy()
+            outData.columnScrollOutput_3_1.children[n - 1].destroy()
+            outData.columnScrollOutput_3_2.children[n - 1].destroy()
+            outData.columnScrollOutput_4.children[n - 1].destroy()
+            outData.columnScrollOutput_4_1.children[n - 1].destroy()
+            outData.columnScrollOutput_5.children[n - 1].destroy()
+            outData.columnScrollOutput_6.children[n - 1].destroy()
+            outData.columnScrollOutput_7.children[n - 1].destroy()
+            outData.columnScrollOutput_8.children[n - 1].destroy()
+            outData.columnScrollOutput_9.children[n - 1].destroy()
+        }
+
+        outData.fuseRating = ""
+        outData.sumDesignCurentConsumer = ""
+        chartComp.lineSeries.clear()
+    }
+    /*******************************************************************************************************/
 
     //signal signalEconomicSection(real economicSection)
 
@@ -45,15 +157,8 @@ Item {
         id: parameterCalculation
     }
 
-    //Соединение с сигналов из класса C++ ParameterCalculation
+    //Диалог с предупреждением о превышении нагрузки
     /*******************************************************************************************************/
-    Connections {
-        target: parameterCalculation
-        function onSignalToQml() {
-            dialogLoadOver_300.visible = true
-        }
-    }
-
     Dialog {
         id: dialogLoadOver_300
         modal: true
@@ -266,22 +371,25 @@ Item {
 
                     //Расчет стандартного сечения
                     let section = [0, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240]
-                    for (let i = 0; i < section.length - 1; ++i) {
-                        if (economicSection > section[i]
-                                && economicSection <= section[i + 1]) {
-                            columnScroll_4.children[parent.sectionNumber].currentIndex = i + 1
+                    for (let n = 0; n < section.length - 1; ++n) {
+                        if (economicSection > section[n]
+                                && economicSection <= section[n + 1]) {
+                            columnScroll_4.children[sectionNumber].currentIndex = n + 1
                         } else if (economicSection > section[section.length - 1]) {
                             root.visibleDialogOver_240 = true
                         }
                     }
 
                     //Расчет сопротивления петли фаза-ноль
+                    /******************************************************************************************/
                     let resistancePhaseZero = parameterCalculation.calculationResistancePhaseZero(
                             columnScroll_4.children[parent.sectionNumber].currentIndex,
                             sectionNumber)
                     outData.columnScrollOutput_8.children[sectionNumber].textField = String(
                                 parameterCalculation.resistancePhaseZero)
+                    /******************************************************************************************/
 
+                    /******************************************************************************************/
                     if (parameterCalculation.checkResistanceVectorPhaseZero()) {//проверка, что заполнены все строки
                         parameterCalculation.calculationSinglePhaseShortCircuit(
                                     root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
@@ -327,6 +435,7 @@ Item {
 
                         //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
                     }
+                    /******************************************************************************************/
                 }
             }
 
@@ -358,44 +467,23 @@ Item {
         let i
         for (i = 0; i < num; ++i) {
             let str = "№" + (i + 1)
-            componentLine.createObject(columnScroll_1, {
-                                           "text": str
-                                       })
-            componentLine.createObject(columnScroll_2, {
-                                           "text": str
-                                       })
-            componentLine.createObject(columnScroll_3, {
-                                           "text": str
-                                       })
-            componentWire.createObject(columnScroll_4, {
-                                           "text": str
-                                       })
+            componentLine.createObject(columnScroll_1, {"text": str})
+            componentLine.createObject(columnScroll_2, {"text": str})
+            componentLine.createObject(columnScroll_3, {"text": str})
+            componentWire.createObject(columnScroll_4, {"text": str})
         }
     }
     /*******************************************************************************************************/
 
     //Функция для загрузки строк в колонки отображения результатов
     /*******************************************************************************************************/
-    function loadOutputLine(vectorSiteLoads
-                            , vectorWeightedAverage
-                            , vectorFullPower
-                            , vectorEquivalentPower
-                            , vectorEquivalentCurrent
-                            , vectorDesignCurrent) {
-
-        for (let n = outData.columnScrollOutput_1.children.length; n > 0; --n) {
-            outData.columnScrollOutput_1.children[n - 1].destroy()
-            outData.columnScrollOutput_2.children[n - 1].destroy()
-            outData.columnScrollOutput_3.children[n - 1].destroy()
-            outData.columnScrollOutput_3_1.children[n - 1].destroy()
-            outData.columnScrollOutput_4.children[n - 1].destroy()
-            outData.columnScrollOutput_4_1.children[n - 1].destrouy()
-            outData.columnScrollOutput_5.children[n - 1].destroy()
-            outData.columnScrollOutput_6.children[n - 1].destroy()
-            outData.columnScrollOutput_7.children[n - 1].destroy()
-            outData.columnScrollOutput_8.children[n - 1].destroy()
-            outData.columnScrollOutput_9.children[n - 1].destroy()
-        }
+    function loadOutputLine(vectorSiteLoads,
+                            vectorWeightedAverage,
+                            vectorFullPower,
+                            vectorEquivalentPower,
+                            vectorEquivalentCurrent,
+                            vectorDesignCurrent,
+                            vectorDesignCurrentConsumer) {
 
         for (let i = 0; i < numberOfConsumers; ++i) {
             let str = "№" + (i + 1)
@@ -414,6 +502,10 @@ Item {
             componentLine.createObject(outData.columnScrollOutput_3_1, {
                                            "text": str,
                                            "textField": vectorDesignCurrent[i]
+                                       })
+            componentLine.createObject(outData.columnScrollOutput_3_2, {
+                                           "text": str,
+                                           "textField": vectorDesignCurrentConsumer[i]
                                        })
             componentLine.createObject(outData.columnScrollOutput_4, {
                                            "text": str
@@ -503,8 +595,10 @@ Item {
                 anchors.right: parent.right
                 bottomPadding: 10
 
+                //Активная нагрузка
+                /*************************************************************************************************/
                 Rectangle {
-                    id: rectangle_1
+                    id: rectangleActivPower
                     width: 158
                     height: 200
                     color: "#e4e4e4"
@@ -531,9 +625,12 @@ Item {
                         }
                     }
                 }
+                /*************************************************************************************************/
 
+                //Длина участка
+                /*************************************************************************************************/
                 Rectangle {
-                    id: rectangle2
+                    id: rectangleLengthSite
                     width: 158
                     height: 200
                     color: "#e4e4e4"
@@ -560,9 +657,12 @@ Item {
                         }
                     }
                 }
+                /*************************************************************************************************/
 
+                //Коэф. активной мощности
+                /*************************************************************************************************/
                 Rectangle {
-                    id: rectangle3
+                    id: rectangleCoefActivPower
                     width: 158
                     height: 200
                     color: "#e4e4e4"
@@ -589,9 +689,12 @@ Item {
                         }
                     }
                 }
+                /*************************************************************************************************/
 
+                //Сечение провода
+                /*************************************************************************************************/
                 Rectangle {
-                    id: rectangle4
+                    id: rectangleWire
                     width: 158
                     height: 200
                     color: "#e4e4e4"
@@ -619,6 +722,7 @@ Item {
                         }
                     }
                 }
+                /*************************************************************************************************/
             }
 
             /**********************************************************************************************************/
@@ -636,12 +740,22 @@ Item {
                 text: qsTr("Ввод")
 
                 onClicked: {
-                    parameterCalculation.clearVectors()
+
+                    //Сброс данных
+                    /*******************************************************************************************/
+                    parameterCalculation.clearVectors()//обнуление векторов в классе C++
+                    dataCleaning()
+                    parameterCalculation.fillingResistanceVectorPhaseZero()
+//                    let arrWire = columnScroll_4.children
+//                    for(let n = 0; n < arrWire.length; ++n) {
+//                        arrWire[n].currentIndex = 0
+//                    }
+                    /*******************************************************************************************/
+
                     numberOfConsumers = columnScroll_1.children.length
                     parameterCalculation.indexComboBoxConsum = comboBoxConsum.currentIndex
 
-                    let i
-                    for (i = 0; i < numberOfConsumers; ++i) {
+                    for (let i = 0; i < numberOfConsumers; ++i) {
                         let strActivLoad = columnScroll_1.children[i].textField
                         let strLengthSite = columnScroll_2.children[i].textField
                         let strActivPowerCoef = columnScroll_3.children[i].textField
@@ -659,16 +773,28 @@ Item {
                                     parseFloat(strActivPowerCoef))
                     }
 
-                    parameterCalculation.parameterCalculation()
-                    let vectorSiteLoads = parameterCalculation.getVecSiteLoads()
-                    let vectorWeightedAverage = parameterCalculation.getVecWeightedAverage()
-                    let vectorFullPower = parameterCalculation.getVecFullPower()
-                    let vectorDesignCurrent = parameterCalculation.getVecDesignCurrent()
-                    let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
-                    let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
-                    loadOutputLine(vectorSiteLoads, vectorWeightedAverage,
-                                   vectorFullPower, vectorEquivalentPower,
-                                   vectorEquivalentCurrent, vectorDesignCurrent)
+                    if(parameterCalculation.parameterCalculation()) {
+                        let vectorSiteLoads = parameterCalculation.getVecSiteLoads()
+                        let vectorWeightedAverage = parameterCalculation.getVecWeightedAverage()
+                        let vectorFullPower = parameterCalculation.getVecFullPower()
+                        let vectorDesignCurrent = parameterCalculation.getVecDesignCurrent()
+
+                        let vectorDesignCurrentConsumer = parameterCalculation.getVecDesignCurrentConsumer()
+                        let sumDesignCurrentConsumer = vectorDesignCurrentConsumer.reduce((sum, current)=>sum + current, 0)
+                        inputData.sumDesignCurrentConsumer = sumDesignCurrentConsumer
+                        outData.sumDesignCurentConsumer = String(sumDesignCurrentConsumer)
+
+                        let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
+                        let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
+                        loadOutputLine(vectorSiteLoads,
+                                       vectorWeightedAverage,
+                                       vectorFullPower,
+                                       vectorEquivalentPower,
+                                       vectorEquivalentCurrent,
+                                       vectorDesignCurrent,
+                                       vectorDesignCurrentConsumer)
+                        fuseCalculation()
+                    }
                 }
             }
 
@@ -738,6 +864,9 @@ Item {
                         layer.enabled: false
                         placeholderText: qsTr("0")
                         onAccepted: {
+
+                            parameterCalculation.clearVectors()//обнуление векторов в классе C++
+                            dataCleaning()
                             loadLine(displayText)
                             parameterCalculation.numberOfConsumers = displayText
 
@@ -914,7 +1043,7 @@ Item {
 
                 /*********************************************************/
                 Label {
-                    id: label10
+                    id: labelEnginePower
                     anchors.left: parent.left
                     anchors.top: label17.bottom
                     anchors.topMargin: 10
@@ -922,91 +1051,111 @@ Item {
                 }
 
                 TextField {
-                    id: textField3
+                    id: textFieldEnginePower
                     anchors.right: parent.right
-                    anchors.verticalCenter:label10.verticalCenter
+                    anchors.verticalCenter:labelEnginePower.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
+
+                    onTextEdited: {
+                        engineCalculation()
+                    }
                 }
 
                 /*********************************************************/
                 Label {
-                    id: label11
+                    id: labelEfficiencyFactor
                     anchors.left: parent.left
-                    anchors.top: label10.bottom
+                    anchors.top: labelEnginePower.bottom
                     anchors.topMargin: 10
                     text: qsTr("КПД двигателя в ед.")
                 }
 
                 TextField {
-                    id: textField4
+                    id: textFieldEfficiencyFactor
                     anchors.right: parent.right
-                    anchors.verticalCenter: label11.verticalCenter
+                    anchors.verticalCenter: labelEfficiencyFactor.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
+
+                    onTextEdited: {
+                        engineCalculation()
+                    }
                 }
 
                 /*********************************************************/
                 Label {
-                    id: label12
+                    id: labelEngineCos
                     anchors.left: parent.left
-                    anchors.top: label11.bottom
+                    anchors.top: labelEfficiencyFactor.bottom
                     anchors.topMargin: 10
                     text: qsTr("Cos двигателя")
                 }
 
                 TextField {
-                    id: textField5
+                    id: textFieldEngineCos
                     anchors.right: parent.right
-                    anchors.verticalCenter: label12.verticalCenter
+                    anchors.verticalCenter: labelEngineCos.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
+
+                    onTextEdited: {
+                        engineCalculation()
+                    }
                 }
 
                 /*********************************************************/
                 Label {
-                    id: label13
+                    id: labelStartingCurrentRatio
                     anchors.left: parent.left
-                    anchors.top: label12.bottom
+                    anchors.top: labelEngineCos.bottom
                     anchors.topMargin: 10
                     text: qsTr("Кратность пускового тока")
                 }
 
                 TextField {
-                    id: textField6
+                    id: textFieldStartingCurrentRatio
                     anchors.right: parent.right
-                    anchors.verticalCenter: label13.verticalCenter
+                    anchors.verticalCenter: labelStartingCurrentRatio.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
+
+                    onTextEdited: {
+                        engineCalculation()
+                    }
                 }
 
                 /*********************************************************/
                 Label {
-                    id: label14
+                    id: labelEngineType
                     anchors.left: parent.left
-                    anchors.top: label13.bottom
+                    anchors.top: labelStartingCurrentRatio.bottom
                     anchors.topMargin: 10
                     text: qsTr("Тип двигателя")
                 }
 
                 ComboBox {
-                    id: comboBox
+                    id: comboBoxEngineType
                     anchors.right: parent.right
-                    anchors.verticalCenter: label14.verticalCenter
+                    anchors.verticalCenter: labelEngineType.verticalCenter
                     anchors.rightMargin: 5
                     width: 220
 
                     model: [
-                        "Короткозамкнутый ротор, до 5с",
-                        "Короткозамкнутый ротор, до 10с",
-                        "Фазный ротор "
+                        qsTr("Короткозамкнутый ротор, до 5с"),
+                        qsTr("Короткозамкнутый ротор, более 10с"),
+                        qsTr("Фазный ротор")
                     ]
 
                     delegate: ItemDelegate {
-                        width: comboBox.width
+                        width: comboBoxEngineType.width
                         Text {
-                            text: qsTr(modelData)
+                            text: modelData
                         }
+                    }
+
+                    onActivated: {
+                        engineCalculation()
                     }
                 }
             }

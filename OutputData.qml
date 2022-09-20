@@ -8,7 +8,8 @@ Item {
     property var columnScrollOutput_1: columnScrollOutput_1     //активная мощность
     property var columnScrollOutput_2: columnScrollOutput_2     //полная мощность
     property var columnScrollOutput_3: columnScrollOutput_3     //косинус средневзвешенный
-    property var columnScrollOutput_3_1: columnScrollOutput_3_1 //расчетный ток
+    property var columnScrollOutput_3_1: columnScrollOutput_3_1 //расчетный ток участков
+    property var columnScrollOutput_3_2: columnScrollOutput_3_2 //расчетный ток нагрузок
     property var columnScrollOutput_4: columnScrollOutput_4     //потеря напряжения
     property var columnScrollOutput_4_1: columnScrollOutput_4_1 //потеря напряжения суммарная
     property var columnScrollOutput_5: columnScrollOutput_5     //эквивалентная мощность
@@ -17,7 +18,10 @@ Item {
     property var columnScrollOutput_8: columnScrollOutput_8     //сопротивление петли-фаза ноль
     property var columnScrollOutput_9: columnScrollOutput_9     //однофазное КЗ
 
-    property alias resistanceTransformer: textFieldResistanseTransform.text
+    property alias fuseRating: textFieldFuse.text
+    property alias ratedEngineCurrent: textFieldEngine.text
+    property alias startingCurrent: textFieldStartingCurrent.text
+    property alias sumDesignCurentConsumer: textFieldDesignCurrentConsumerSum.text
 
     width: 677
     height: 360
@@ -121,7 +125,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка полной мощности
@@ -159,7 +162,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка средневзвешенных косинусов
@@ -197,7 +199,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка расчетных токов на учасках
@@ -212,7 +213,7 @@ Item {
                             anchors.top: parent.top
                             anchors.topMargin: 5
                             anchors.bottomMargin: 10
-                            text: qsTr("Расчетный ток, А")
+                            text: qsTr("Расчетный ток участка, А")
                         }
 
                         Rectangle {
@@ -235,7 +236,43 @@ Item {
                             }
                         }
                     }
+                    /*******************************************************************************************/
 
+                    //Колонка расчетных токов нагрузок
+                    /*******************************************************************************************/
+                    Item {
+                        width: 158
+                        height: 220
+
+                        Label {
+                            id: labelDesignCurrentConsumer
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 5
+                            anchors.bottomMargin: 10
+                            text: qsTr("Расчетный ток нагрузки, А")
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: labelDesignCurrentConsumer.bottom
+                            color: "#e4e4e4"
+                            radius: 5
+
+                            ScrollView {
+                                x: 0
+                                y: 0
+                                width: 158
+                                height: 200
+
+                                Column {
+                                    id: columnScrollOutput_3_2
+                                }
+                            }
+                        }
+                    }
                     /*******************************************************************************************/
 
                     //Колонка потерь напряжения
@@ -273,7 +310,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка суммарных потерь напряжения
@@ -311,7 +347,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка эквивалентной мощности
@@ -349,7 +384,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка эквивалентного тока
@@ -387,7 +421,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка экономического сечения
@@ -426,7 +459,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка сопротивлений петель фаза-ноль
@@ -464,7 +496,6 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
 
                     //Колонка однофазных КЗ
@@ -502,38 +533,39 @@ Item {
                             }
                         }
                     }
-
                     /*******************************************************************************************/
                 }
             }
 
-            Item {
-                anchors.top: scrollViewOutput.bottom
-                anchors.left: parent.left
-                anchors.topMargin: 20
-                anchors.leftMargin: 20
-                Row {
-                    spacing: 10
-                    Label {
-                        text: "Текущее сопротивление трансформатора"
-                    }
-                    TextField {
-                        id: textFieldResistanseTransform
-                        width: 80
-                        placeholderText: "0"
-                    }
-                }
-            }
+//            Item {
+//                anchors.top: scrollViewOutput.bottom
+//                anchors.left: parent.left
+//                anchors.topMargin: 20
+//                anchors.leftMargin: 20
+//                Row {
+//                    spacing: 10
+//                    Label {
+//                        text: "Номинал предохранителя возле трансформатора, А"
+//                    }
+//                    TextField {
+//                        id: textFieldFuse
+//                        width: 80
+//                        placeholderText: "0"
+//                    }
+//                }
+//            }
 
-
-            /*Label {
+            /*******************************************************************/
+            Label {
                 id: labelProtectionDevice
-                anchors.horizontalCenter: row.horizontalCenter
-                anchors.top: row.bottom
+                anchors.horizontalCenter: scrollViewOutput.horizontalCenter
+                anchors.top: scrollViewOutput.bottom
+                anchors.topMargin: 5
                 text: qsTr("Аппараты защиты и двигатель")
                 font.bold: true
                 font.pointSize: 20
             }
+            /*******************************************************************/
 
             Label {
                 id: labelFuse
@@ -545,11 +577,67 @@ Item {
             }
 
             TextField {
-                anchors.top: labelProtectionDevice.bottom
+                id: textFieldFuse
+                anchors.verticalCenter: labelFuse.verticalCenter
                 anchors.left: labelFuse.right
                 anchors.topMargin: 10
                 anchors.leftMargin: 10
-            }*/
+            }
+            /*******************************************************************/
+
+            Label {
+                id: labelEngine
+                anchors.top: labelFuse.bottom
+                anchors.left: parent.left
+                anchors.topMargin: 10
+                anchors.leftMargin: 10
+                text: qsTr("Номинальный ток электродвигателя, А")
+            }
+
+            TextField {
+                id: textFieldEngine
+                anchors.verticalCenter: labelEngine.verticalCenter
+                anchors.left: labelFuse.right
+                anchors.topMargin: 10
+                anchors.leftMargin: 10
+            }
+            /*******************************************************************/
+
+            Label {
+                id: labelStartingCurrent
+                anchors.top: labelEngine.bottom
+                anchors.left: parent.left
+                anchors.topMargin: 10
+                anchors.leftMargin: 10
+                text: qsTr("Пусковой ток электродвигателя, А")
+            }
+
+            TextField {
+                id: textFieldStartingCurrent
+                anchors.verticalCenter: labelStartingCurrent.verticalCenter
+                anchors.left: labelFuse.right
+                anchors.topMargin: 10
+                anchors.leftMargin: 10
+            }
+
+            /*******************************************************************/
+
+            Label {
+                id: labelDesignCurrentConsumerSum
+                anchors.top: labelStartingCurrent.bottom
+                anchors.left: parent.left
+                anchors.topMargin: 10
+                anchors.leftMargin: 10
+                text: qsTr("Суммарный расчетный ток нагрузок, А")
+            }
+
+            TextField {
+                id: textFieldDesignCurrentConsumerSum
+                anchors.verticalCenter: labelDesignCurrentConsumerSum.verticalCenter
+                anchors.left: labelFuse.right
+                anchors.topMargin: 10
+                anchors.leftMargin: 10
+            }
         }
     }
 }
