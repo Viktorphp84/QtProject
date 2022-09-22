@@ -181,7 +181,7 @@ public:
     Q_INVOKABLE void setVecLengthSite(double);                           //добавление занчения в вектор длин участков
     Q_INVOKABLE void setActivPowerCoefficient(double);                   //добавление заначения в вектор коэф. активной мощности
     Q_INVOKABLE void clearVectors();                                     //очистка всех векторов
-    Q_INVOKABLE bool parameterCalculation();                             //основная функция из которой расчитываются все параметры сети
+    Q_INVOKABLE bool parameterCalculation(int);                             //основная функция из которой расчитываются все параметры сети
     Q_INVOKABLE QVector<double> getVecSiteLoads() const;                 //получить вектор m_vecSiteLoad
     Q_INVOKABLE QVector<double> getVecWeightedAverage() const;           //получить вектор средневзвешенных косинусов
     Q_INVOKABLE QVector<double> getVecFullPower() const;                 //получить вектор полных мощностей

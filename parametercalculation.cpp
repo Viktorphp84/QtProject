@@ -128,7 +128,8 @@ void ParameterCalculation::calculationWeightedAverage() {
     m_vecWeightedAverageCoefficient.push_back(m_vecActivPowerCoefficient[m_numberOfConsumers - 1]);
 }
 
-bool ParameterCalculation::parameterCalculation() {
+bool ParameterCalculation::parameterCalculation(int index) {
+    m_indexComboBoxConsum = index;
     calculationWeightedAverage();
     if(calculationOfLoadsBySections()) {
         calculationFullPower();
@@ -259,7 +260,11 @@ bool ParameterCalculation::checkResistanceVectorPhaseZero() {
 
 double ParameterCalculation::calculationVoltageLoss(const int currentIndex, const int numberSection) {
     double sin = qSqrt(1 - qPow(m_vecWeightedAverageCoefficient[numberSection], 2));
-    double voltageLoss = (m_vecFullPower[numberSection] * (m_vecResistanceWire[currentIndex].activResistancePhase * m_vecWeightedAverageCoefficient[numberSection] + m_vecResistanceWire[currentIndex].reactancePhase * sin) * m_vecLengthSite[numberSection]) / 0.38;
+    double voltageLoss = (m_vecFullPower[numberSection]
+                          * (m_vecResistanceWire[currentIndex].activResistancePhase
+                             * m_vecWeightedAverageCoefficient[numberSection]
+                             + m_vecResistanceWire[currentIndex].reactancePhase * sin)
+                          * m_vecLengthSite[numberSection]) / 0.38;
     return voltageLoss;
 }
 

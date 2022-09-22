@@ -23,6 +23,7 @@ Item {
     property double startingCurrentRatio: 0
     property double engineType: 0
     property double startingCurrent: 0
+    property int temp: 0 //переменная для сравнения текущего количества потребителей и введенного
 
     //Соединение с сигналов из класса C++ ParameterCalculation
     /*******************************************************************************************************/
@@ -107,6 +108,56 @@ Item {
     }
     /*******************************************************************************************************/
 
+    //Расчет сопротивления петли фаза-ноль
+    /*******************************************************************************************************/
+    function  calculationSinglePhaseShortCircuit() {
+        parameterCalculation.calculationSinglePhaseShortCircuit(
+                    root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
+        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit() //запись в вектор
+
+        for (let g = 0; g < numberOfConsumers; ++g) {
+            outData.columnScrollOutput_9.children[g].textField = String(
+                        vecSinglePhaseShortCircuit[g]) //заполнение строк
+        }
+    }
+    /*******************************************************************************************************/
+
+    //Расчет потерь напряжения и добавление точек на график потерь напряжения
+    /*******************************************************************************************************/
+    function calculationVoltageLoss() {
+        chartComp.lineSeries.append(0, 0)
+
+        let arrayVoltageLoss = []
+        let maxValue
+        let sumVoltageLoss = 0
+        for (let y = 0; y < numberOfConsumers; ++y) {
+            let voltageLoss = parameterCalculation.calculationVoltageLoss(
+                    columnScroll_4.children[y].currentIndex, y)
+            sumVoltageLoss += voltageLoss
+            arrayVoltageLoss.push(sumVoltageLoss)
+            outData.columnScrollOutput_4.children[y].textField = String(voltageLoss)
+            outData.columnScrollOutput_4_1.children[y].textField = String(sumVoltageLoss)
+            chartComp.lineSeries.append(y + 1, sumVoltageLoss)
+        }
+        maxValue = Math.max(...arrayVoltageLoss)
+        let axisY = Math.ceil(maxValue)
+
+        let k = Math.ceil(axisY / 20)
+        let tickY = Math.ceil(axisY / k)
+        while(true) {
+            if(axisY % tickY == 0) {
+                break
+            } else {
+                axisY += 1
+            }
+        }
+        tickY += 1
+
+        chartComp.maxAxisY = axisY
+        chartComp.tickCountY = tickY
+    }
+    /*******************************************************************************************************/
+
     //Очистка данных и полей
     /*******************************************************************************************************/
     function dataCleaning() {
@@ -122,8 +173,10 @@ Item {
             outData.columnScrollOutput_5.children[n - 1].destroy()
             outData.columnScrollOutput_6.children[n - 1].destroy()
             outData.columnScrollOutput_7.children[n - 1].destroy()
-            outData.columnScrollOutput_8.children[n - 1].destroy()
-            outData.columnScrollOutput_9.children[n - 1].destroy()
+            if(temp != parameterCalculation.numberOfConsumers) {
+                outData.columnScrollOutput_8.children[n - 1].destroy()
+                outData.columnScrollOutput_9.children[n - 1].destroy()
+            }
         }
 
         outData.fuseRating = ""
@@ -362,80 +415,80 @@ Item {
 
                 onAccepted: {
 
-                    //Расчет экономического сечения
-                    parameterCalculation.calculationEconomicSection(
-                                Number(textFieldEconomicCurrent.text),
-                                parent.sectionNumber)
-                    let economicSection = parameterCalculation.economicSection
-                    textFieldEconomicSection.text = economicSection
+                    if(checkBox3.checkState) {
+                        //Расчет экономического сечения
+                        parameterCalculation.calculationEconomicSection(Number(textFieldEconomicCurrent.text),
+                                                                        parent.sectionNumber)
+                        let economicSection = parameterCalculation.economicSection
+                        textFieldEconomicSection.text = economicSection
 
-                    //Расчет стандартного сечения
-                    let section = [0, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240]
-                    for (let n = 0; n < section.length - 1; ++n) {
-                        if (economicSection > section[n]
-                                && economicSection <= section[n + 1]) {
-                            columnScroll_4.children[sectionNumber].currentIndex = n + 1
-                        } else if (economicSection > section[section.length - 1]) {
-                            root.visibleDialogOver_240 = true
-                        }
-                    }
-
-                    //Расчет сопротивления петли фаза-ноль
-                    /******************************************************************************************/
-                    let resistancePhaseZero = parameterCalculation.calculationResistancePhaseZero(
-                            columnScroll_4.children[parent.sectionNumber].currentIndex,
-                            sectionNumber)
-                    outData.columnScrollOutput_8.children[sectionNumber].textField = String(
-                                parameterCalculation.resistancePhaseZero)
-                    /******************************************************************************************/
-
-                    /******************************************************************************************/
-                    if (parameterCalculation.checkResistanceVectorPhaseZero()) {//проверка, что заполнены все строки
-                        parameterCalculation.calculationSinglePhaseShortCircuit(
-                                    root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
-                        let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit() //запись в вектор
-
-                        for (let i = 0; i < numberOfConsumers; ++i) {
-                            outData.columnScrollOutput_9.children[i].textField = String(
-                                        vecSinglePhaseShortCircuit[i]) //заполнение строк
-                        }
-
-                        //Расчет потерь напряжения и добавление точек на график потерь напряжения
-                        chartComp.lineSeries.append(0, 0)
-
-                        let arrayVoltageLoss = []
-                        let maxValue
-                        let sumVoltageLoss = 0
-                        for (let y = 0; y < numberOfConsumers; ++y) {
-                            let voltageLoss = parameterCalculation.calculationVoltageLoss(
-                                    columnScroll_4.children[y].currentIndex, y)
-                            sumVoltageLoss += voltageLoss
-                            arrayVoltageLoss.push(sumVoltageLoss)
-                            outData.columnScrollOutput_4.children[y].textField = String(voltageLoss)
-                            outData.columnScrollOutput_4_1.children[y].textField = String(sumVoltageLoss)
-                            chartComp.lineSeries.append(y + 1, sumVoltageLoss)
-                        }
-                        maxValue = Math.max(...arrayVoltageLoss)
-                        let axisY = Math.ceil(maxValue)
-
-                        let k = Math.ceil(axisY / 20)
-                        let tickY = Math.ceil(axisY / k)
-                        while(true) {
-                            if(axisY % tickY == 0) {
-                                break
-                            } else {
-                                axisY += 1
+                        //Расчет стандартного сечения
+                        let section = [0, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240]
+                        for (let n = 0; n < section.length - 1; ++n) {
+                            if (economicSection > section[n]
+                                    && economicSection <= section[n + 1]) {
+                                columnScroll_4.children[sectionNumber].currentIndex = n + 1
+                            } else if (economicSection > section[section.length - 1]) {
+                                root.visibleDialogOver_240 = true
                             }
                         }
-                        tickY += 1
 
-                        chartComp.maxAxisY = axisY
-                        chartComp.tickCountY = tickY
-                    } else {
+                        //Расчет сопротивления петли фаза-ноль
+                        /******************************************************************************************/
+                        let resistancePhaseZero = parameterCalculation.calculationResistancePhaseZero(
+                                columnScroll_4.children[sectionNumber].currentIndex, sectionNumber)
+                        outData.columnScrollOutput_8.children[sectionNumber].textField = String(
+                                    parameterCalculation.resistancePhaseZero)
+                        /******************************************************************************************/
 
-                        //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
-                    }
-                    /******************************************************************************************/
+                        /******************************************************************************************/
+                        if (parameterCalculation.checkResistanceVectorPhaseZero()) {//проверка, что заполнены все строки
+                            parameterCalculation.calculationSinglePhaseShortCircuit(
+                                        root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
+                            let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit() //запись в вектор
+
+                            for (let i = 0; i < numberOfConsumers; ++i) {
+                                outData.columnScrollOutput_9.children[i].textField = String(
+                                            vecSinglePhaseShortCircuit[i]) //заполнение строк
+                            }
+
+                            //Расчет потерь напряжения и добавление точек на график потерь напряжения
+                            chartComp.lineSeries.append(0, 0)
+
+                            let arrayVoltageLoss = []
+                            let maxValue
+                            let sumVoltageLoss = 0
+                            for (let y = 0; y < numberOfConsumers; ++y) {
+                                let voltageLoss = parameterCalculation.calculationVoltageLoss(
+                                        columnScroll_4.children[y].currentIndex, y)
+                                sumVoltageLoss += voltageLoss
+                                arrayVoltageLoss.push(sumVoltageLoss)
+                                outData.columnScrollOutput_4.children[y].textField = String(voltageLoss)
+                                outData.columnScrollOutput_4_1.children[y].textField = String(sumVoltageLoss)
+                                chartComp.lineSeries.append(y + 1, sumVoltageLoss)
+                            }
+                            maxValue = Math.max(...arrayVoltageLoss)
+                            let axisY = Math.ceil(maxValue)
+
+                            let k = Math.ceil(axisY / 20)
+                            let tickY = Math.ceil(axisY / k)
+                            while(true) {
+                                if(axisY % tickY == 0) {
+                                    break
+                                } else {
+                                    axisY += 1
+                                }
+                            }
+                            tickY += 1
+
+                            chartComp.maxAxisY = axisY
+                            chartComp.tickCountY = tickY
+                        } else {
+
+                            //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
+                        }
+                        /******************************************************************************************/
+                    }  
                 }
             }
 
@@ -526,14 +579,12 @@ Item {
                                                       "text": str,
                                                       "sectionNumber": i
                                                   })
-            componentLine.createObject(outData.columnScrollOutput_8, {
-                                           "text": str
-                                           //"textField":
-                                       })
-            componentLine.createObject(outData.columnScrollOutput_9, {
-                                           "text": str
-                                           //"textField":
-                                       })
+            if(temp != parameterCalculation.numberOfConsumers) {
+
+                componentLine.createObject(outData.columnScrollOutput_8, {"text": str})
+
+                componentLine.createObject(outData.columnScrollOutput_9, {"text": str})
+            }
         }
     }
 
@@ -743,15 +794,25 @@ Item {
 
                     //Сброс данных
                     /*******************************************************************************************/
+
                     parameterCalculation.clearVectors()//обнуление векторов в классе C++
                     dataCleaning()
+
                     parameterCalculation.fillingResistanceVectorPhaseZero()
-//                    let arrWire = columnScroll_4.children
-//                    for(let n = 0; n < arrWire.length; ++n) {
-//                        arrWire[n].currentIndex = 0
-//                    }
+                    let arrWire = columnScroll_4.children
+                    if(checkBox3.checkState) {
+                        for(let j = 0; j < arrWire.length; ++j) {
+                            arrWire[j].currentIndex = 0
+                        }
+                        for(let y = 0; y < numberOfConsumers; ++y) {
+                            outData.columnScrollOutput_8.children[y].textField = ""
+                            outData.columnScrollOutput_9.children[y].textField = ""
+                        }
+                    }
                     /*******************************************************************************************/
 
+                    //Заполнение данных
+                    /*******************************************************************************************/
                     numberOfConsumers = columnScroll_1.children.length
                     parameterCalculation.indexComboBoxConsum = comboBoxConsum.currentIndex
 
@@ -760,7 +821,8 @@ Item {
                         let strLengthSite = columnScroll_2.children[i].textField
                         let strActivPowerCoef = columnScroll_3.children[i].textField
                         if (strActivLoad === "" || strActivPowerCoef === ""
-                                || strLengthSite === "") {
+                                || strLengthSite === ""
+                                || (arrWire[i].currentIndex === 0 && checkBox3.checkState === 0)) {
                             dialogWarning.visible = true
                             return
                         }
@@ -772,8 +834,11 @@ Item {
                         parameterCalculation.setActivPowerCoefficient(
                                     parseFloat(strActivPowerCoef))
                     }
+                    /*******************************************************************************************/
 
-                    if(parameterCalculation.parameterCalculation()) {
+                    //Расчет параметров
+                    /*******************************************************************************************/
+                    if(parameterCalculation.parameterCalculation(comboBoxConsum.currentIndex)) {
                         let vectorSiteLoads = parameterCalculation.getVecSiteLoads()
                         let vectorWeightedAverage = parameterCalculation.getVecWeightedAverage()
                         let vectorFullPower = parameterCalculation.getVecFullPower()
@@ -786,6 +851,8 @@ Item {
 
                         let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
                         let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
+
+                        //Построение строк в окне вывода данных
                         loadOutputLine(vectorSiteLoads,
                                        vectorWeightedAverage,
                                        vectorFullPower,
@@ -793,16 +860,42 @@ Item {
                                        vectorEquivalentCurrent,
                                        vectorDesignCurrent,
                                        vectorDesignCurrentConsumer)
+
+                        //Расчет предохранителя
                         fuseCalculation()
+
+                        if(!checkBox3.checkState) {
+                            //Расчет сопротивления петли фаза-ноль
+                            /******************************************************************************************/
+                            for(let x = 0; x < numberOfConsumers; ++x) {
+                                parameterCalculation.calculationResistancePhaseZero(
+                                        arrWire[x].currentIndex, x)
+                                outData.columnScrollOutput_8.children[x].textField = String(
+                                            parameterCalculation.resistancePhaseZero)
+                            }
+                            /******************************************************************************************/
+
+                            //Расчет однофазного КЗ
+                            calculationSinglePhaseShortCircuit()
+
+                            //Расчет потерь напряжения и добавление точек на график потерь напряжения
+                            calculationVoltageLoss()
+                            temp = parameterCalculation.numberOfConsumers
+                        }
                     }
+                    /*******************************************************************************************/
                 }
             }
 
+            //Диалог о незаполненных полях
+            /**********************************************************************************************************/
             Dialog {
                 id: dialogWarning
                 modal: true
                 title: qsTr("Заполнены не все поля!")
                 closePolicy: Popup.CloseOnEscape
+                palette.button: "#26972D"
+                palette.window: "#67E46F"
                 DialogButtonBox {
                     anchors.centerIn: parent
                     Layout.alignment: Qt.AlignHCenter
@@ -820,7 +913,7 @@ Item {
             //Блок "Линия"
             /**********************************************************************************************************/
             Item {
-                id: item1
+                id: itemLine
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.right: parent.horizontalCenter
@@ -830,90 +923,92 @@ Item {
                 anchors.leftMargin: 15
 
                 Frame {
-                    id: frame
+                    id: frameLine
                     width: 322
                     height: 122
                     anchors.centerIn: parent
                 }
 
                 Label {
-                    id: label15
+                    id: labelLine
                     anchors.top: parent.top
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Линия")
                     font.pointSize: 14
                 }
 
-                GridLayout {
-                    rows: 3
-                    columns: 2
-                    anchors.top: label15.bottom
+
+                Label {
+                    id: labelNumberConsumer
                     anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
+                    anchors.top: labelLine.bottom
+                    anchors.topMargin: 5
+                    anchors.leftMargin: 5
+                    text: qsTr("Количество потребителей")
+                    font.family: "Arial"
+                    font.pointSize: 10
+                }
 
-                    Label {
-                        id: label1
-                        text: qsTr("Количество потребителей")
-                        font.family: "Arial"
-                        font.pointSize: 10
+                TextField {
+                    id: textFieldNumberConsumer
+                    anchors.left: labelNumberConsumer.right
+                    anchors.verticalCenter: labelNumberConsumer.verticalCenter
+                    anchors.leftMargin: 20
+                    layer.enabled: false
+                    placeholderText: qsTr("0")
+                    onAccepted: {
+                        parameterCalculation.numberOfConsumers = displayText
+                        parameterCalculation.clearVectors()//обнуление векторов в классе C++
+                        dataCleaning()
+                        loadLine(displayText)
+
+                        chartComp.maxAxisX = parameterCalculation.numberOfConsumers
+                        chartComp.tickCountX = parameterCalculation.numberOfConsumers + 1
+                        parameterCalculation.fillingResistanceVectorPhaseZero()
                     }
+                }
 
-                    TextField {
-                        id: textField
-                        layer.enabled: false
-                        placeholderText: qsTr("0")
-                        onAccepted: {
+                Label {
+                    id: labelLoadType
+                    anchors.top: labelNumberConsumer.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.topMargin: 15
+                    text: qsTr("Выбор типа нагрузки")
+                    font.pointSize: 10
+                    font.family: "Arial"
+                }
 
-                            parameterCalculation.clearVectors()//обнуление векторов в классе C++
-                            dataCleaning()
-                            loadLine(displayText)
-                            parameterCalculation.numberOfConsumers = displayText
+                ComboBox {
+                    id: comboBoxConsum
+                    anchors.top: labelLoadType.bottom
+                    anchors.topMargin: 10
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 230
+                    objectName: "comboBoxConsum"
+                    textRole: ""
+                    Layout.leftMargin: -50
 
-                            chartComp.maxAxisX = parameterCalculation.numberOfConsumers
-                            chartComp.tickCountX = parameterCalculation.numberOfConsumers + 1
-                            parameterCalculation.fillingResistanceVectorPhaseZero()
+                    model: ListModel {
+                        id: listModelComboConsum
+                        ListElement {
+                            name: "Жилые дома с нагрузкой до 2кВт"
+                        }
+                        ListElement {
+                            name: "Жилые дома с нагрузкой свыше 2кВт"
+                        }
+                        ListElement {
+                            name: "Жилые дома с электоплитами"
+                        }
+                        ListElement {
+                            name: "Производственные потребители"
                         }
                     }
 
-                    Label {
-                        id: label2
-                        text: qsTr("Выбор типа нагрузки")
-                        font.pointSize: 10
-                        font.family: "Arial"
-                    }
-
-                    ComboBox {
-                        id: comboBoxConsum
-                        objectName: "comboBoxConsum"
-                        textRole: ""
-                        Layout.leftMargin: -50
-
-                        model: ListModel {
-                            id: listModelComboConsum
-                            ListElement {
-                                name: "Жилые дома с нагр. до 2кВт"
-                            }
-                            ListElement {
-                                name: "Жилые дома с нагр. свыше 2кВт"
-                            }
-                            ListElement {
-                                name: "Жилые дома с электоплитами"
-                            }
-                            ListElement {
-                                name: "Производственные потребители"
-                            }
+                    delegate: ItemDelegate {
+                        width: comboBoxConsum.width
+                        Text {
+                            text: modelData
                         }
-                    }
-
-                    Label {
-                        id: label7
-                        text: qsTr("Экономическая плотность тока")
-                    }
-
-                    TextField {
-                        id: textField1
-                        placeholderText: qsTr("0")
                     }
                 }
             }
@@ -924,7 +1019,7 @@ Item {
             Item {
                 id: item2
                 anchors.top: parent.top
-                anchors.left: item1.right
+                anchors.left: itemLine.right
                 anchors.right: parent.right
                 anchors.bottom: parent.verticalCenter
                 anchors.leftMargin: 15
@@ -1017,7 +1112,7 @@ Item {
             /**********************************************************************************************************/
             Item {
                 id: item3
-                anchors.top: item1.bottom
+                anchors.top: itemLine.bottom
                 anchors.left: parent.left
                 anchors.right: parent.horizontalCenter
                 anchors.bottom: rowRect.top
@@ -1159,7 +1254,9 @@ Item {
                     }
                 }
             }
+            /**********************************************************************************************************/
 
+            //Группа checkBox
             /**********************************************************************************************************/
             Item {
                 id: item4
@@ -1185,8 +1282,15 @@ Item {
                         id: checkBox2
                         text: qsTr("Расчет по максималному отклонению")
                     }
+
+                    CheckBox {
+                        id: checkBox3
+                        checkState: Qt.Checked
+                        text: qsTr("Автоматический расчет сечения")
+                    }
                 }
             }
+            /**********************************************************************************************************/
         }
     }
 }
