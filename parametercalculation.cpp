@@ -222,7 +222,7 @@ void ParameterCalculation::calculationEconomicSection(const double economicCurre
     m_economicSection = economicSection;
 }
 
-void ParameterCalculation::calculationResistancePhaseZero(const int currentIndex, const int sectionNumber) {
+void ParameterCalculation::calculateResistancePhaseZero(const int currentIndex, const int sectionNumber) {
     double squareActivResistance = qPow((m_vecResistanceWire[currentIndex].activResistancePhase
                                          + m_vecResistanceWire[currentIndex].activResistanceZero), 2);
     double squareReactance = qPow((m_vecResistanceWire[currentIndex].reactancePhase
@@ -288,4 +288,22 @@ void ParameterCalculation::calculationDesignCurrentConsumer() {
 
 QVector<double> ParameterCalculation::getVecDesignCurrentConsumer() const {
     return m_vecDesignCurrentConsumer;
+}
+
+double ParameterCalculation::calculationRecloser(double transformerResistance,
+                                                 double activResistanceSum,
+                                                 double ReactanceSum,
+                                                 double thermalRelease) {
+    double sensitivityConditionLength = (220 / (3 * thermalRelease) - transformerResistance / 3) /
+            qSqrt((qPow(activResistanceSum, 2) + qPow(ReactanceSum, 2)));
+
+}
+
+QVector<double> ParameterCalculation::getResistancePhaseZero(int index) {
+    QVector<double> resistance;
+    resistance.push_back(m_vecResistanceWire[index].activResistancePhase);
+    resistance.push_back(m_vecResistanceWire[index].activResistanceZero);
+    resistance.push_back(m_vecResistanceWire[index].reactancePhase);
+    resistance.push_back(m_vecResistanceWire[index].reactanceZero);
+    return resistance;
 }

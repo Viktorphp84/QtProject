@@ -11,7 +11,9 @@ Item {
     property var columnScrollOutput_3_1: columnScrollOutput_3_1 //расчетный ток участков
     property var columnScrollOutput_3_2: columnScrollOutput_3_2 //расчетный ток нагрузок
     property var columnScrollOutput_4: columnScrollOutput_4     //потеря напряжения
+    property var columnScrollOutput_4_0: columnScrollOutput_4_0   //потеря напряжения в процентах
     property var columnScrollOutput_4_1: columnScrollOutput_4_1 //потеря напряжения суммарная
+    property var columnScrollOutput_4_2: columnScrollOutput_4_2 //потеря напряжения суммарная в процентах
     property var columnScrollOutput_5: columnScrollOutput_5     //эквивалентная мощность
     property var columnScrollOutput_6: columnScrollOutput_6     //эквивалентный ток
     property var columnScrollOutput_7: columnScrollOutput_7     //экономическое сечение
@@ -22,6 +24,10 @@ Item {
     property alias ratedEngineCurrent: textFieldEngine.text
     property alias startingCurrent: textFieldStartingCurrent.text
     property alias sumDesignCurentConsumer: textFieldDesignCurrentConsumerSum.text
+    property alias enginCurrent: textFieldEngine.text
+    property alias thermalRelease: textFieldThermalRelease.text
+    property alias electromagneticRelease: textFieldElectromagneticRelease.text
+    property alias resistancePhaseZeroSum: textFieldResistancePhaseZeroSum.text
 
     width: 677
     height: 360
@@ -312,6 +318,43 @@ Item {
                     }
                     /*******************************************************************************************/
 
+                    //Колонка потерь напряжения в процентах
+                    /*******************************************************************************************/
+                    Item {
+                        width: 158
+                        height: 220
+
+                        Label {
+                            id: labelVoltageLossPercent
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 5
+                            anchors.bottomMargin: 10
+                            text: qsTr("Потеря напряжения, %")
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: labelVoltageLossPercent.bottom
+                            color: "#e4e4e4"
+                            radius: 5
+
+                            ScrollView {
+                                x: 0
+                                y: 0
+                                width: 158
+                                height: 200
+
+                                Column {
+                                    id: columnScrollOutput_4_0
+                                }
+                            }
+                        }
+                    }
+                    /*******************************************************************************************/
+
                     //Колонка суммарных потерь напряжения
                     /*******************************************************************************************/
                     Item {
@@ -343,6 +386,43 @@ Item {
 
                                 Column {
                                     id: columnScrollOutput_4_1
+                                }
+                            }
+                        }
+                    }
+                    /*******************************************************************************************/
+
+                    //Колонка суммарных потерь напряжения в процентах
+                    /*******************************************************************************************/
+                    Item {
+                        width: 158
+                        height: 220
+
+                        Label {
+                            id: labelVoltageLossSumPercent
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 5
+                            anchors.bottomMargin: 10
+                            text: qsTr("Потеря напр. суммарная, %")
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: labelVoltageLossSumPercent.bottom
+                            color: "#e4e4e4"
+                            radius: 5
+
+                            ScrollView {
+                                x: 0
+                                y: 0
+                                width: 158
+                                height: 200
+
+                                Column {
+                                    id: columnScrollOutput_4_2
                                 }
                             }
                         }
@@ -537,24 +617,6 @@ Item {
                 }
             }
 
-//            Item {
-//                anchors.top: scrollViewOutput.bottom
-//                anchors.left: parent.left
-//                anchors.topMargin: 20
-//                anchors.leftMargin: 20
-//                Row {
-//                    spacing: 10
-//                    Label {
-//                        text: "Номинал предохранителя возле трансформатора, А"
-//                    }
-//                    TextField {
-//                        id: textFieldFuse
-//                        width: 80
-//                        placeholderText: "0"
-//                    }
-//                }
-//            }
-
             /*******************************************************************/
             Label {
                 id: labelProtectionDevice
@@ -572,7 +634,7 @@ Item {
                 anchors.top: labelProtectionDevice.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
+                anchors.leftMargin: 15
                 text: qsTr("Номинальный ток предохранителя на ТП, А")
             }
 
@@ -581,25 +643,58 @@ Item {
                 anchors.verticalCenter: labelFuse.verticalCenter
                 anchors.left: labelFuse.right
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
+                anchors.leftMargin: 70
+            }
+            /*******************************************************************/
+
+            Label {
+                id: labelThermalRelease
+                anchors.top: labelFuse.bottom
+                anchors.left: parent.left
+                anchors.topMargin: 10
+                anchors.leftMargin: 15
+                text: qsTr("Номинальный ток теплового расцепителя, А")
+            }
+
+            TextField {
+                id: textFieldThermalRelease
+                anchors.verticalCenter: labelThermalRelease.verticalCenter
+                anchors.horizontalCenter: textFieldFuse.horizontalCenter
+                anchors.topMargin: 10
+            }
+            /*******************************************************************/
+
+            Label {
+                id: labelElectromagneticRelease
+                anchors.top: labelThermalRelease.bottom
+                anchors.left: parent.left
+                anchors.topMargin: 10
+                anchors.leftMargin: 15
+                text: qsTr("Номинальный ток электромагнитного расцепителя, А")
+            }
+
+            TextField {
+                id: textFieldElectromagneticRelease
+                anchors.verticalCenter: labelElectromagneticRelease.verticalCenter
+                anchors.horizontalCenter: textFieldFuse.horizontalCenter
+                anchors.topMargin: 10
             }
             /*******************************************************************/
 
             Label {
                 id: labelEngine
-                anchors.top: labelFuse.bottom
+                anchors.top: labelElectromagneticRelease.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
+                anchors.leftMargin: 15
                 text: qsTr("Номинальный ток электродвигателя, А")
             }
 
             TextField {
                 id: textFieldEngine
                 anchors.verticalCenter: labelEngine.verticalCenter
-                anchors.left: labelFuse.right
+                anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
             }
             /*******************************************************************/
 
@@ -608,16 +703,15 @@ Item {
                 anchors.top: labelEngine.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
+                anchors.leftMargin: 15
                 text: qsTr("Пусковой ток электродвигателя, А")
             }
 
             TextField {
                 id: textFieldStartingCurrent
                 anchors.verticalCenter: labelStartingCurrent.verticalCenter
-                anchors.left: labelFuse.right
+                anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
             }
 
             /*******************************************************************/
@@ -627,16 +721,33 @@ Item {
                 anchors.top: labelStartingCurrent.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
+                anchors.leftMargin: 15
                 text: qsTr("Суммарный расчетный ток нагрузок, А")
             }
 
             TextField {
                 id: textFieldDesignCurrentConsumerSum
                 anchors.verticalCenter: labelDesignCurrentConsumerSum.verticalCenter
-                anchors.left: labelFuse.right
+                anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
-                anchors.leftMargin: 10
+            }
+
+            /*******************************************************************/
+
+            Label {
+                id: labelResistancePhaseZeroSum
+                anchors.top: labelDesignCurrentConsumerSum.bottom
+                anchors.left: parent.left
+                anchors.topMargin: 10
+                anchors.leftMargin: 15
+                text: qsTr("Суммарное сопротивление петли фаза-ноль, Ом")
+            }
+
+            TextField {
+                id: textFieldResistancePhaseZeroSum
+                anchors.verticalCenter: labelResistancePhaseZeroSum.verticalCenter
+                anchors.horizontalCenter: textFieldFuse.horizontalCenter
+                anchors.topMargin: 10
             }
         }
     }

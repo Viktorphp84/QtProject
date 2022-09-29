@@ -181,7 +181,7 @@ public:
     Q_INVOKABLE void setVecLengthSite(double);                           //добавление занчения в вектор длин участков
     Q_INVOKABLE void setActivPowerCoefficient(double);                   //добавление заначения в вектор коэф. активной мощности
     Q_INVOKABLE void clearVectors();                                     //очистка всех векторов
-    Q_INVOKABLE bool parameterCalculation(int);                             //основная функция из которой расчитываются все параметры сети
+    Q_INVOKABLE bool parameterCalculation(int);                          //основная функция из которой расчитываются все параметры сети
     Q_INVOKABLE QVector<double> getVecSiteLoads() const;                 //получить вектор m_vecSiteLoad
     Q_INVOKABLE QVector<double> getVecWeightedAverage() const;           //получить вектор средневзвешенных косинусов
     Q_INVOKABLE QVector<double> getVecFullPower() const;                 //получить вектор полных мощностей
@@ -191,12 +191,14 @@ public:
     Q_INVOKABLE QVector<double> getVecDesignCurrent() const;             //получить вектор расчетных токов участков
     Q_INVOKABLE QVector<double> getVecDesignCurrentConsumer() const;     //получить вектор расчетных токов нагрузок
     Q_INVOKABLE void calculationEconomicSection(const double, const int);//расчет экономического сечения
-    Q_INVOKABLE void calculationResistancePhaseZero(const int, const int);/* метод принимает
+    Q_INVOKABLE void calculateResistancePhaseZero(const int, const int);/* метод принимает
     значения активного и реактивного сопротивлений фазного и нулевго проводов и рассчитывае сопротивление петли фаза-ноль*/
     Q_INVOKABLE void calculationSinglePhaseShortCircuit(const double);   //расчет однофазных КЗ
     Q_INVOKABLE void fillingResistanceVectorPhaseZero();                 //заполнение вектора сопротивления петли фаза-ноль значением -1
     Q_INVOKABLE bool checkResistanceVectorPhaseZero();                   //проверка вектора сопротивления петли фаза-ноль на наличие значения -1
     Q_INVOKABLE double calculationVoltageLoss(const int, const int);     //расчет потерь напряжения
+    Q_INVOKABLE double calculationRecloser(double, double, double, double);                      //расчет секционирующего пункта
+    Q_INVOKABLE QVector<double> getResistancePhaseZero(int);     //получить значения активного и реактивного сопротивлений
 
     bool isMoreThenFourTimes(int);          //определение отличия нагрузок
     void calculationWeightedAverage();      //расчет средневзвешенных косинусов по участкам
@@ -206,7 +208,6 @@ public:
     void calculationEquivalentCurrent();    //расчет эквивалентных токов
     void calculationDesignCurrent();        //вычисление расчетного тока на участках
     void calculationDesignCurrentConsumer();//вычисление расчетного тока нагрузок
-
 
     template<typename type>
     double findingCoefOfSimultaneity(QMap<type, double>, type);
