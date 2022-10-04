@@ -27,14 +27,125 @@ Item {
     property bool checkBox3CheckState: true //дополнительная переменная для снятия ограничения на выбор элементов в comboBoxFire
     property double thermalRelease: 0
     property var vectorResistancePhaseZero: [] //массив для сохранения сопротивлений петель фаза-ноль по участкам
+    property bool isFirstSession: true //переменная показывает вызывалась ли функция перерасчета сечения раньше
+    property bool needRecalculate: false //нужен перерасчет сечений или нет
+    property double percentageLoss: Number(textFieldCheckBox2.text)
 
     //Соединение с сигналов из класса C++ ParameterCalculation
     /*******************************************************************************************************/
     Connections {
         target: parameterCalculation
         function onSignalToQml() {
-            dialogLoadOver_300.visible = true
+            dialogWarning.title = "Введена нагрузка более 300 кВт!"
+            dialogWarning.visible = true
         }
+    }
+    /*******************************************************************************************************/
+
+    //Расчет параметров линии
+    /*******************************************************************************************************/
+    function calculateParametrs() {
+
+        numberOfConsumers = columnScroll_1.children.length
+        parameterCalculation.indexComboBoxConsum = comboBoxConsum.currentIndex
+
+        let arrWire = columnScroll_4.children
+
+        //Сброс данных
+        /*******************************************************************************************/
+        parameterCalculation.clearVectors()//обнуление векторов в классе C++
+        clearData()
+        parameterCalculation.fillingResistanceVectorPhaseZero()
+        /*******************************************************************************************/
+
+        for (let r = 0; r < numberOfConsumers; ++r) {
+            let strActivLoad = columnScroll_1.children[r].textField
+            let strLengthSite = columnScroll_2.children[r].textField
+            let strActivPowerCoef = columnScroll_3.children[r].textField
+            if (strActivLoad === "" ||
+                strActivPowerCoef === "" ||
+                strLengthSite === "" ||
+                (arrWire[r].currentIndex === 0 && checkBox3.checkState === 0)) {
+
+                dialogWarning.title = "Заполнены не все поля!"
+                dialogWarning.visible = true
+                return
+            } else {
+                //Заполнение данных
+                parameterCalculation.setVecActivLoad(parseFloat(strActivLoad))
+                parameterCalculation.setVecLengthSite(parseFloat(strLengthSite))
+                parameterCalculation.setActivPowerCoefficient(parseFloat(strActivPowerCoef))
+            }
+        }
+
+        //Расчет параметров
+        /*******************************************************************************************/
+        if(parameterCalculation.parameterCalculation(comboBoxConsum.currentIndex)) {
+            let vectorSiteLoads = parameterCalculation.getVecSiteLoads()
+            let vectorWeightedAverage = parameterCalculation.getVecWeightedAverage()
+            let vectorFullPower = parameterCalculation.getVecFullPower()
+            let vectorDesignCurrent = parameterCalculation.getVecDesignCurrent()
+
+            let vectorDesignCurrentConsumer = parameterCalculation.getVecDesignCurrentConsumer()
+            let sumDesignCurrentConsumer = vectorDesignCurrentConsumer.reduce((sum, current)=>sum + current, 0)
+            inputData.sumDesignCurrentConsumer = sumDesignCurrentConsumer
+            outData.sumDesignCurentConsumer = String(sumDesignCurrentConsumer)
+
+            let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
+            let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
+
+            //Расчет предохранителя
+            calculateFuse()
+            //Расчет теплового расцепителя
+            calculateThermalRelease()
+            //Расчет электромагнитного расцепителя
+            calculateElectromagneticRelease()
+
+            let vectorResistancePhaseZero = []
+            let vectorVoltageLoss = []
+            let vectorVoltageLossPercent = []
+            let vectorVoltageLossSum = []
+            let vectorVoltageLossSumPercent = []
+            let vectorSinglePhaseShortCircuit = []
+            let resistancePhaseZeroSum = 0
+
+            if(!checkBox3.checkState) {
+                //Расчет сопротивления петли фаза-ноль
+                /******************************************************************************************/
+
+                for(let x = 0; x < numberOfConsumers; ++x) {
+                    parameterCalculation.calculateResistancePhaseZero(arrWire[x].currentIndex, x)
+                    vectorResistancePhaseZero.push(parameterCalculation.resistancePhaseZero)
+                }
+                resistancePhaseZeroSum =vectorResistancePhaseZero.reduce((sum, current) => sum + current, 0)
+                outData.resistancePhaseZeroSum = resistancePhaseZeroSum
+                /******************************************************************************************/
+
+                //Расчет однофазного КЗ
+                vectorSinglePhaseShortCircuit = calculateSinglePhaseShortCircuit()
+
+                //Расчет потерь напряжения и добавление точек на график потерь напряжения
+                calculateVoltageLoss(vectorVoltageLoss, vectorVoltageLossPercent,
+                                     vectorVoltageLossSum, vectorVoltageLossSumPercent)
+            }
+
+            //Построение строк в окне вывода данных
+            loadOutputLine(vectorSiteLoads,
+                           vectorWeightedAverage,
+                           vectorFullPower,
+                           vectorEquivalentPower,
+                           vectorEquivalentCurrent,
+                           vectorDesignCurrent,
+                           vectorDesignCurrentConsumer,
+                           vectorResistancePhaseZero,
+                           vectorVoltageLoss,
+                           vectorVoltageLossPercent,
+                           vectorVoltageLossSum,
+                           vectorVoltageLossSumPercent,
+                           vectorSinglePhaseShortCircuit)
+
+        }
+        /*******************************************************************************************/
     }
     /*******************************************************************************************************/
 
@@ -172,26 +283,160 @@ Item {
                 activResistanceSum += (arrResistance[0] + arrResistance[1])
                 reactanceSum = +(arrResistance[2] + arrResistance[3])
             }
-            parameterCalculation.calculationRecloser(root.componentTransformApp.transformerResistance,
+            let sensitivityConditionLength = parameterCalculation.calculationRecloser(root.componentTransformApp.transformerResistance,
                                                      activResistanceSum,
                                                      reactanceSum,
                                                      inputData.thermalRelease)
+
         } else {
             //Сообщение, что расчет не требуется
         }
     }
     /*******************************************************************************************************/
 
+    //Уточнение результата расчета сечения
+    /*******************************************************************************************************/
+    function refineLosses() {
+
+        if(!inputData.needRecalculate) {
+            return
+        }
+
+        let hasBeenIncreased = false
+        for(let g = numberOfConsumers - 1; g >= 0; --g) {
+            columnScroll_4.children[g].currentIndex -= 1
+            calculateParametrs()
+            let maxLoss =
+                Number(
+                    outData.columnScrollOutput_4_2.children[outData.columnScrollOutput_4_2.children.length - 1].textField
+                    )
+            if(maxLoss > 10) {
+                columnScroll_4.children[g].currentIndex += 1
+                calculateParametrs()
+                break
+            } else {
+                hasBeenIncreased = true
+            }
+        }
+
+        //Если в цикле ни в одном проходе не было увеличено сечение участка, то выходим из рекурсии
+        if(!hasBeenIncreased) {
+            return
+        }
+
+        refineLosses()
+    }
+    /*******************************************************************************************************/
+
     //Перерасчет сечений
     /*******************************************************************************************************/
     function recalculateSection() {
-        if(Number(outData.columnScrollOutput_4_2.textField) <= 10) {
-            let minElement = 100
-            for(let i = 0; i < numberOfConsumers; +i) {
-                if(columnScroll_4.children[i].currentIndex < minElement) {
-                    minElement = columnScroll_4.children[i].currentIndex
+
+        //Суммарные потери на последнем участке
+        let maxVoltageLossPercent =
+            outData.columnScrollOutput_4_2.children[outData.columnScrollOutput_4_2.children.length - 1].textField
+
+        if(maxVoltageLossPercent > 10) {
+            //Находим участок с максимальными потерями
+            let maxLoss = 0
+            let numberSiteMaxLoss = 0
+            for(let i = 0; i < numberOfConsumers; ++i) {
+                if(Number(outData.columnScrollOutput_4_0.children[i].textField) > maxLoss) {
+                    maxLoss = Number(outData.columnScrollOutput_4_0.children[i].textField)
+                    numberSiteMaxLoss = i
                 }
             }
+
+            // При первом входе в функцию перерасчета сечений скидываем сечения после участка с максимальными
+            // потерями в минимальные значения
+            if(inputData.isFirstSession) {
+                for(let n = numberSiteMaxLoss + 1; n < numberOfConsumers; ++n) {
+                    columnScroll_4.children[n].currentIndex = 1;
+                }
+                inputData.isFirstSession = false
+            }
+
+            //Поднимаем сечения до участка с наибольшими потерями до сечения равного этому участку
+            let state = false //переменная указывает были ли изменено сечение хотя бы на одном участке
+            for(let x = 0; x < numberSiteMaxLoss; ++x) {
+                if(columnScroll_4.children[x].currentIndex < columnScroll_4.children[numberSiteMaxLoss].currentIndex) {
+                     columnScroll_4.children[x].currentIndex = columnScroll_4.children[numberSiteMaxLoss].currentIndex
+                    state = true
+                }
+            }
+
+            // Если сечения не были изменены, то поднимаем наименьшее сечение участка с наибольшим индексом, но не выше
+            // сечения первого участка
+            let minSection = 100
+            let numberSiteMinSection = 0
+            if(!state) {
+                for(let y = 0; y < numberSiteMaxLoss; ++y) {
+                    if(columnScroll_4.children[y].currentIndex < minSection) {
+                        minSection = columnScroll_4.children[y].currentIndex
+                        numberSiteMinSection = y
+                    }
+                }
+                if((columnScroll_4.children[numberSiteMinSection].currentIndex + 1)
+                        < columnScroll_4.children[0].currentIndex
+                        && columnScroll_4.children[numberSiteMinSection].currentIndex < 10) {
+                    columnScroll_4.children[numberSiteMinSection].currentIndex += 1
+                    state = true
+                } else {
+                    if(columnScroll_4.children[numberSiteMinSection].currentIndex === 10) {
+                        dialogWarning.title = "Достигнуто максимально возможное сечение провода"
+                        dialogWarning.visible = true
+                        return
+                    }
+                }
+            }
+
+            // Если до участка с макс. потерями все сечения выровнены по этому участку, то поднимаем сечения участков за
+            // ним, но не более сечения этого участка
+            minSection = 100
+            numberSiteMinSection = 0
+            if(!state) {
+                for(let t = numberSiteMaxLoss + 1; t < numberOfConsumers; ++t) {
+                    if(columnScroll_4.children[t].currentIndex < minSection) {
+                        minSection = columnScroll_4.children[t].currentIndex
+                        numberSiteMinSection = t
+                    }
+                }
+                if((columnScroll_4.children[numberSiteMinSection].currentIndex + 1)
+                        < columnScroll_4.children[numberSiteMaxLoss].currentIndex
+                        && columnScroll_4.children[numberSiteMinSection].currentIndex < 10) {
+                    columnScroll_4.children[numberSiteMinSection].currentIndex += 1
+                    state = true
+                } else {
+                    if(columnScroll_4.children[numberSiteMinSection].currentIndex === 10) {
+                        dialogWarning.title = "Достигнуто максимально возможное сечение провода"
+                        dialogWarning.visible = true
+                        return
+                    }
+                }
+            }
+
+            // Если все сечения до и после участка с максимальными потерями выровнены по нему, то начинаем поднимать
+            // сечения на участках до участка с макс. потерями
+            minSection = 100
+            numberSiteMinSection = 0
+            if(!state) {
+                for(let f = 0; f <= numberSiteMaxLoss; ++f) {
+                    if(columnScroll_4.children[f].currentIndex < minSection) {
+                        minSection = columnScroll_4.children[f].currentIndex
+                        numberSiteMinSection = f
+                    }
+                }
+                columnScroll_4.children[numberSiteMinSection].currentIndex += 1
+            }
+
+            //Перерасчет параметров линии
+            calculateParametrs()
+            recalculateSection()
+            inputData.needRecalculate = true
+        } else {
+            dialogWarning.title = "Не требуется перерасчет сечения"
+            dialogWarning.visible = true
+            inputData.needRecalculate = false
         }
     }
     /*******************************************************************************************************/
@@ -203,10 +448,6 @@ Item {
                     root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
         let vecSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit() //запись в вектор
 
-//        for (let g = 0; g < numberOfConsumers; ++g) {
-//            outData.columnScrollOutput_9.children[g].textField = String(
-//                        vecSinglePhaseShortCircuit[g]) //заполнение строк
-//        }
         return vecSinglePhaseShortCircuit
     }
     /*******************************************************************************************************/
@@ -301,29 +542,6 @@ Item {
     ParameterCalculation {
         id: parameterCalculation
     }
-
-    //Диалог с предупреждением о превышении нагрузки
-    /*******************************************************************************************************/
-    Dialog {
-        id: dialogLoadOver_300
-        modal: true
-        title: qsTr("Введена нагрузка более 300кВт!")
-        closePolicy: Popup.CloseOnEscape
-        palette.button: "#26972D"
-        palette.window: "#67E46F"
-        DialogButtonBox {
-            anchors.centerIn: parent
-            Layout.alignment: Qt.AlignHCenter
-            standardButtons: DialogButtonBox.Ok
-            onAccepted: {
-                dialogLoadOver_300.visible = false
-            }
-        }
-
-        parent: inputData
-        anchors.centerIn: inputData
-    }
-    /*******************************************************************************************************/
 
     //Компонент для динамического отображения строк
     /*******************************************************************************************************/
@@ -546,6 +764,9 @@ Item {
                         /******************************************************************************************/
                         if (parameterCalculation.checkResistanceVectorPhaseZero()) {//проверка, что заполнены все строки
 
+                            //Очистка графика
+                            chartComp.lineSeries.clear()
+
                             //Расчет полного сопротивления петли фаза-ноль
                             outData.resistancePhaseZeroSum =
                                     vectorResistancePhaseZero.reduce((sum, current) => sum + current, 0)
@@ -596,9 +817,6 @@ Item {
                             chartComp.maxAxisY = axisY
                             chartComp.tickCountY = tickY
                             inputData.vectorResistancePhaseZero = []
-                        } else {
-
-                            //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
                         }
                         /******************************************************************************************/
                     }
@@ -621,8 +839,8 @@ Item {
     //Функция для загрузки строк в колонки ввода данных
     /*******************************************************************************************************/
     function loadLine(string) {
-        let n
-        for (n = columnScroll_1.children.length; n > 0; --n) {
+
+        for (let n = columnScroll_1.children.length; n > 0; --n) {
             columnScroll_1.children[n - 1].destroy()
             columnScroll_2.children[n - 1].destroy()
             columnScroll_3.children[n - 1].destroy()
@@ -630,8 +848,8 @@ Item {
         }
 
         let num = parseInt(string, 10)
-        let i
-        for (i = 0; i < num; ++i) {
+
+        for (let i = 0; i < num; ++i) {
             let str = "№" + (i + 1)
             componentLine.createObject(columnScroll_1, {"text": str})
             componentLine.createObject(columnScroll_2, {"text": str})
@@ -953,122 +1171,13 @@ Item {
                 text: qsTr("Ввод")
 
                 onClicked: {
+                    calculateParametrs()
 
-                    numberOfConsumers = columnScroll_1.children.length
-                    parameterCalculation.indexComboBoxConsum = comboBoxConsum.currentIndex
-
-                    let arrWire = columnScroll_4.children
-
-                    //Сброс данных
-                    /*******************************************************************************************/
-                    parameterCalculation.clearVectors()//обнуление векторов в классе C++
-                    clearData()
-
-                    parameterCalculation.fillingResistanceVectorPhaseZero()
-
-//                    if(checkBox3.checkState) {
-//                        for(let j = 0; j < arrWire.length; ++j) {
-//                            arrWire[j].currentIndex = 0
-//                        }
-//                        if(outData.columnScrollOutput_8.children[0]) {
-//                            for(let y = 0; y < numberOfConsumers; ++y) {
-//                                outData.columnScrollOutput_8.children[y].textField = ""
-//                                outData.columnScrollOutput_9.children[y].textField = ""
-//                            }
-//                        }
-//                    }
-                    /*******************************************************************************************/
-
-                    for (let r = 0; r < numberOfConsumers; ++r) {
-                        let strActivLoad = columnScroll_1.children[r].textField
-                        let strLengthSite = columnScroll_2.children[r].textField
-                        let strActivPowerCoef = columnScroll_3.children[r].textField
-                        if (strActivLoad === "" ||
-                            strActivPowerCoef === "" ||
-                            strLengthSite === "" ||
-                            (arrWire[r].currentIndex === 0 && checkBox3.checkState === 0)) {
-
-                            dialogWarning.visible = true
-                            return
-                        } else {
-                            //Заполнение данных
-                            parameterCalculation.setVecActivLoad(parseFloat(strActivLoad))
-                            parameterCalculation.setVecLengthSite(parseFloat(strLengthSite))
-                            parameterCalculation.setActivPowerCoefficient(parseFloat(strActivPowerCoef))
-                        }
+                    //Перерасчет сечения по максимальному отклонению, если поставлен флаг в checkBox2
+                    if(checkBox2.checkState) {
+                        recalculateSection()
+                        refineLosses()
                     }
-
-                    //Расчет параметров
-                    /*******************************************************************************************/
-                    if(parameterCalculation.parameterCalculation(comboBoxConsum.currentIndex)) {
-                        let vectorSiteLoads = parameterCalculation.getVecSiteLoads()
-                        let vectorWeightedAverage = parameterCalculation.getVecWeightedAverage()
-                        let vectorFullPower = parameterCalculation.getVecFullPower()
-                        let vectorDesignCurrent = parameterCalculation.getVecDesignCurrent()
-
-                        let vectorDesignCurrentConsumer = parameterCalculation.getVecDesignCurrentConsumer()
-                        let sumDesignCurrentConsumer = vectorDesignCurrentConsumer.reduce((sum, current)=>sum + current, 0)
-                        inputData.sumDesignCurrentConsumer = sumDesignCurrentConsumer
-                        outData.sumDesignCurentConsumer = String(sumDesignCurrentConsumer)
-
-                        let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
-                        let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
-
-                        //Расчет предохранителя
-                        calculateFuse()
-                        //Расчет теплового расцепителя
-                        calculateThermalRelease()
-                        //Расчет электромагнитного расцепителя
-                        calculateElectromagneticRelease()
-
-                        let vectorResistancePhaseZero = []
-                        let vectorVoltageLoss = []
-                        let vectorVoltageLossPercent = []
-                        let vectorVoltageLossSum = []
-                        let vectorVoltageLossSumPercent = []
-                        let vectorSinglePhaseShortCircuit = []
-                        let resistancePhaseZeroSum = 0
-
-                        if(!checkBox3.checkState) {
-                            //Расчет сопротивления петли фаза-ноль
-                            /******************************************************************************************/
-
-                            for(let x = 0; x < numberOfConsumers; ++x) {
-                                parameterCalculation.calculateResistancePhaseZero(arrWire[x].currentIndex, x)
-                                vectorResistancePhaseZero.push(parameterCalculation.resistancePhaseZero)
-                            }
-                            resistancePhaseZeroSum =vectorResistancePhaseZero.reduce((sum, current) => sum + current, 0)
-                            outData.resistancePhaseZeroSum = resistancePhaseZeroSum
-                            /******************************************************************************************/
-
-                            //Расчет однофазного КЗ
-                            vectorSinglePhaseShortCircuit = calculateSinglePhaseShortCircuit()
-
-                            //Расчет потерь напряжения и добавление точек на график потерь напряжения
-                            calculateVoltageLoss(vectorVoltageLoss, vectorVoltageLossPercent,
-                                                 vectorVoltageLossSum, vectorVoltageLossSumPercent)
-
-                            //Расчет секционирующих пунктов
-                            //calculateRecloser()
-                            //temp = parameterCalculation.numberOfConsumers
-                        }
-
-                        //Построение строк в окне вывода данных
-                        loadOutputLine(vectorSiteLoads,
-                                       vectorWeightedAverage,
-                                       vectorFullPower,
-                                       vectorEquivalentPower,
-                                       vectorEquivalentCurrent,
-                                       vectorDesignCurrent,
-                                       vectorDesignCurrentConsumer,
-                                       vectorResistancePhaseZero,
-                                       vectorVoltageLoss,
-                                       vectorVoltageLossPercent,
-                                       vectorVoltageLossSum,
-                                       vectorVoltageLossSumPercent,
-                                       vectorSinglePhaseShortCircuit)
-                    }
-                    /*******************************************************************************************/
                 }
             }
 
@@ -1454,18 +1563,45 @@ Item {
                     anchors.centerIn: parent
 
                     CheckBox {
-                        id: checkBox
-                        text: qsTr("Расчет секционирующих пунктов")
-                    }
-
-                    CheckBox {
                         id: checkBox1
-                        text: qsTr("Расчет отклонения от большего к меньшему")
+                        text: qsTr("Расчет секционирующих пунктов")
+
+                        onCheckStateChanged: {
+                            if(checkBox1.checkState > 0) {
+                                checkBox2.checkState = 0
+                                checkBox3.checkState = 0
+                            }
+                        }
                     }
 
-                    CheckBox {
-                        id: checkBox2
-                        text: qsTr("Расчет по максималному отклонению")
+                    RowLayout {
+                        spacing: 5
+
+                        CheckBox {
+                            id: checkBox2
+                            text: qsTr("Расчет по максимальному отклонению")
+
+                            onCheckStateChanged: {
+                                if(checkBox2.checkState > 0) {
+                                    checkBox1.checkState = 0
+                                    checkBox3.checkState = 0
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "  "
+                        }
+
+                        TextField {
+                            id: textFieldCheckBox2
+                            Layout.maximumWidth: 30
+                            placeholderText: qsTr("10")
+                        }
+
+                        Label {
+                            text: "%"
+                        }
                     }
 
                     CheckBox {
@@ -1473,6 +1609,11 @@ Item {
                         checkState: Qt.Checked
                         text: qsTr("Автоматический расчет сечения")
                         onCheckStateChanged: {
+                            if(checkBox3.checkState > 0) {
+                                checkBox2.checkState = 0
+                                checkBox1.checkState = 0
+                            }
+
                             //Сброс данных
                             /*******************************************************************************************/
                             parameterCalculation.clearVectors()//обнуление векторов в классе C++

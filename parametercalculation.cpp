@@ -296,7 +296,7 @@ double ParameterCalculation::calculationRecloser(double transformerResistance,
                                                  double thermalRelease) {
     double sensitivityConditionLength = (220 / (3 * thermalRelease) - transformerResistance / 3) /
             qSqrt((qPow(activResistanceSum, 2) + qPow(ReactanceSum, 2)));
-
+    return sensitivityConditionLength;
 }
 
 QVector<double> ParameterCalculation::getResistancePhaseZero(int index) {
