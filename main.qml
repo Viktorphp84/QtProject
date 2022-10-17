@@ -65,8 +65,8 @@ ApplicationWindow {
             }
         }
     }
-
     /*******************************************************************************************************/
+
     Rectangle {
         id: backgroundRectangle
         width: root.width - 10
@@ -122,7 +122,11 @@ ApplicationWindow {
             property var componentInput: inpData
             property var componentOutput: outData
             property var componentChart: chartComp
+
+
             InputData {
+                property var dialogWarning: dialogWarning
+
                 id: inpData
                 x: 0
                 y: 0
@@ -145,6 +149,31 @@ ApplicationWindow {
                 x: backgroundRectangle.width - inpData.width
                 y: inpData.height
             }
+
+            //Диалог о незаполненных полях
+            /**********************************************************************************************************/
+            Dialog {
+                id: dialogWarning
+                modal: true
+                title: qsTr("Заполнены не все поля!")
+                closePolicy: Popup.CloseOnEscape
+                palette.button: "#26972D"
+                palette.window: "#67E46F"
+                DialogButtonBox {
+                    anchors.centerIn: parent
+                    Layout.alignment: Qt.AlignHCenter
+                    standardButtons: DialogButtonBox.Ok
+                    onAccepted: {
+                        dialogWarning.visible = false
+                    }
+                }
+
+                //parent: inputData
+
+                x: root.width / 2 - dialogWarning.width / 2
+                y: root.height / 2 - dialogWarning.height / 2
+            }
+            /**********************************************************************************************************/
         }
     }
 

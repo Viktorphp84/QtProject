@@ -11,7 +11,7 @@ Item {
     property var columnScrollOutput_3_1: columnScrollOutput_3_1 //расчетный ток участков
     property var columnScrollOutput_3_2: columnScrollOutput_3_2 //расчетный ток нагрузок
     property var columnScrollOutput_4: columnScrollOutput_4     //потеря напряжения
-    property var columnScrollOutput_4_0: columnScrollOutput_4_0   //потеря напряжения в процентах
+    property var columnScrollOutput_4_0: columnScrollOutput_4_0 //потеря напряжения в процентах
     property var columnScrollOutput_4_1: columnScrollOutput_4_1 //потеря напряжения суммарная
     property var columnScrollOutput_4_2: columnScrollOutput_4_2 //потеря напряжения суммарная в процентах
     property var columnScrollOutput_5: columnScrollOutput_5     //эквивалентная мощность
@@ -19,6 +19,7 @@ Item {
     property var columnScrollOutput_7: columnScrollOutput_7     //экономическое сечение
     property var columnScrollOutput_8: columnScrollOutput_8     //сопротивление петли-фаза ноль
     property var columnScrollOutput_9: columnScrollOutput_9     //однофазное КЗ
+    property var columnScrollOutput_10: columnScrollOutput_10   //расстояние до СП
 
     property alias fuseRating: textFieldFuse.text
     property alias ratedEngineCurrent: textFieldEngine.text
@@ -614,6 +615,43 @@ Item {
                         }
                     }
                     /*******************************************************************************************/
+
+                    //Колонка расстояний до СП
+                    /*******************************************************************************************/
+                    Item {
+                        width: 290
+                        height: 220
+
+                        Label {
+                            id: labelRecloserLength
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            anchors.topMargin: 5
+                            anchors.bottomMargin: 10
+                            text: qsTr("Расстояние до СП, км")
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: labelRecloserLength.bottom
+                            color: "#e4e4e4"
+                            radius: 5
+
+                            ScrollView {
+                                x: 0
+                                y: 0
+                                width: 290
+                                height: 200
+
+                                Column {
+                                    id: columnScrollOutput_10
+                                }
+                            }
+                        }
+                    }
+                    /*******************************************************************************************/
                 }
             }
 
@@ -653,7 +691,7 @@ Item {
                 anchors.left: parent.left
                 anchors.topMargin: 10
                 anchors.leftMargin: 15
-                text: qsTr("Номинальный ток теплового расцепителя, А")
+                text: qsTr("Номинальный ток теплового расцепителя на ТП, А")
             }
 
             TextField {
@@ -670,7 +708,7 @@ Item {
                 anchors.left: parent.left
                 anchors.topMargin: 10
                 anchors.leftMargin: 15
-                text: qsTr("Номинальный ток электромагнитного расцепителя, А")
+                text: qsTr("Номинальный ток электромагнитного расцепителя на ТП, А")
             }
 
             TextField {

@@ -190,6 +190,7 @@ public:
     Q_INVOKABLE QVector<double> getVecSinglePhaseShortCircuit() const;   //получить вектор однофазных КЗ
     Q_INVOKABLE QVector<double> getVecDesignCurrent() const;             //получить вектор расчетных токов участков
     Q_INVOKABLE QVector<double> getVecDesignCurrentConsumer() const;     //получить вектор расчетных токов нагрузок
+    Q_INVOKABLE QVector<double> getVecLengthSite() const;                //получить вектор длин участков
     Q_INVOKABLE void calculationEconomicSection(const double, const int);//расчет экономического сечения
     Q_INVOKABLE void calculateResistancePhaseZero(const int, const int);/* метод принимает
     значения активного и реактивного сопротивлений фазного и нулевго проводов и рассчитывае сопротивление петли фаза-ноль*/

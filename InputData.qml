@@ -14,6 +14,8 @@ Item {
     property int heightItem: 360
     property var component
 
+    property int toFixed: 6 //указывает до скольки знаков будут округляться результаты расчетов при выводе в строки
+
     property var parameterCalculation: parameterCalculation
     property alias numberOfConsumers: parameterCalculation.numberOfConsumers
     property alias transformerResistance: textFieldTransformerResistance.text
@@ -27,9 +29,17 @@ Item {
     property bool checkBox3CheckState: true //дополнительная переменная для снятия ограничения на выбор элементов в comboBoxFire
     property double thermalRelease: 0
     property var vectorResistancePhaseZero: [] //массив для сохранения сопротивлений петель фаза-ноль по участкам
+
+    //Перерасчет сечений
     property bool isFirstSession: true //переменная показывает вызывалась ли функция перерасчета сечения раньше
     property bool needRecalculate: false //нужен перерасчет сечений или нет
-    property double percentageLoss: Number(textFieldCheckBox2.text)
+    property alias percentageLoss: textFieldCheckBox2.text
+
+    //СП
+    property var arrayRecloserLength: [] //массив для сохранения расстояний до СП
+    property double sensitivityConditionLength: 0 //расстояние до СП
+    property int numberOfReclosers: 0 //количество СП
+    property int siteNumber: 0 //номер участка
 
     //Соединение с сигналов из класса C++ ParameterCalculation
     /*******************************************************************************************************/
@@ -65,11 +75,12 @@ Item {
             if (strActivLoad === "" ||
                 strActivPowerCoef === "" ||
                 strLengthSite === "" ||
-                (arrWire[r].currentIndex === 0 && checkBox3.checkState === 0)) {
+                (arrWire[r].currentIndex === 0 && checkBox3.checkState === 0) ||
+                    checkBox2.checkState && inputData.percentageLoss === "") {
 
                 dialogWarning.title = "Заполнены не все поля!"
                 dialogWarning.visible = true
-                return
+                return 0
             } else {
                 //Заполнение данных
                 parameterCalculation.setVecActivLoad(parseFloat(strActivLoad))
@@ -89,7 +100,7 @@ Item {
             let vectorDesignCurrentConsumer = parameterCalculation.getVecDesignCurrentConsumer()
             let sumDesignCurrentConsumer = vectorDesignCurrentConsumer.reduce((sum, current)=>sum + current, 0)
             inputData.sumDesignCurrentConsumer = sumDesignCurrentConsumer
-            outData.sumDesignCurentConsumer = String(sumDesignCurrentConsumer)
+            outData.sumDesignCurentConsumer = String(sumDesignCurrentConsumer.toFixed(inputData.toFixed))
 
             let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
             let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
@@ -97,9 +108,9 @@ Item {
             //Расчет предохранителя
             calculateFuse()
             //Расчет теплового расцепителя
-            calculateThermalRelease()
+            calculateThermalRelease(0)
             //Расчет электромагнитного расцепителя
-            calculateElectromagneticRelease()
+            calculateElectromagneticRelease(0)
 
             let vectorResistancePhaseZero = []
             let vectorVoltageLoss = []
@@ -117,8 +128,8 @@ Item {
                     parameterCalculation.calculateResistancePhaseZero(arrWire[x].currentIndex, x)
                     vectorResistancePhaseZero.push(parameterCalculation.resistancePhaseZero)
                 }
-                resistancePhaseZeroSum =vectorResistancePhaseZero.reduce((sum, current) => sum + current, 0)
-                outData.resistancePhaseZeroSum = resistancePhaseZeroSum
+                resistancePhaseZeroSum = vectorResistancePhaseZero.reduce((sum, current) => sum + current, 0)
+                outData.resistancePhaseZeroSum = String(resistancePhaseZeroSum.toFixed(inputData.toFixed))
                 /******************************************************************************************/
 
                 //Расчет однофазного КЗ
@@ -145,6 +156,8 @@ Item {
                            vectorSinglePhaseShortCircuit)
 
         }
+
+        return 1
         /*******************************************************************************************/
     }
     /*******************************************************************************************************/
@@ -173,12 +186,12 @@ Item {
 
         if(enginePower && efficiencyFactor && engineCos && startingCurrentRatio) {
             let ratedEngineCurrent = enginePower / (Math.sqrt(3) * engineCos * 0.38 * efficiencyFactor)
-            outData.ratedEngineCurrent = String(ratedEngineCurrent)
+            outData.ratedEngineCurrent = String(ratedEngineCurrent.toFixed(inputData.toFixed))
             let startingCurrent = startingCurrentRatio * ratedEngineCurrent
             inputData.startingCurrent = startingCurrent
-            outData.startingCurrent = String(startingCurrent)
+            outData.startingCurrent = String(startingCurrent.toFixed(inputData.toFixed))
             calculateFuse()
-            calculateThermalRelease()
+            calculateThermalRelease(0)
             calculateElectromagneticRelease()
         }
     }
@@ -213,18 +226,18 @@ Item {
             dialogWarning.visible = true
         }
 
-        outData.fuseRating = String(fuseRating)
+        outData.fuseRating = String(fuseRating.toFixed(inputData.toFixed))
     }
     /*******************************************************************************************************/
 
     //Расчет теплового расцепителя
     /*******************************************************************************************************/
-    function calculateThermalRelease() {
+    function calculateThermalRelease(siteNumber) {
         let arrThermalRelease = [1, 2, 4, 5, 6, 8, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160
                                  , 180, 200, 225, 250, 320, 400, 500, 630, 800, 1000, 1600, 2500, 4000, 6300]
 
         let arrDesignCurrent = parameterCalculation.getVecDesignCurrent()
-        let designSiteCurrent = arrDesignCurrent[0]
+        let designSiteCurrent = arrDesignCurrent[siteNumber]
         let designCurrentRatingTemp =
             1.1 * (designSiteCurrent - Number(outData.enginCurrent) + 0.4 * Number(outData.startingCurrent))
         let designCurrentRating = 0
@@ -239,18 +252,22 @@ Item {
             dialogWarning.visible = true
         }
 
-        inputData.thermalRelease = designCurrentRating
-        outData.thermalRelease = String(designCurrentRating)
+        if(siteNumber === 0) {
+            inputData.thermalRelease = designCurrentRating
+            outData.thermalRelease = String(designCurrentRating.toFixed(inputData.toFixed))
+        }
+
+        return designCurrentRating
     }
     /*******************************************************************************************************/
 
     //Расчет электромагнитного расцепителя
     /*******************************************************************************************************/
-    function calculateElectromagneticRelease() {
+    function calculateElectromagneticRelease(siteNumber) {
         let arrThermalRelease = [1, 2, 4, 5, 6, 8, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160
                                  , 180, 200, 225, 250, 320, 400, 500, 630, 800, 1000, 1600, 2500, 4000, 6300]
         let arrDesignCurrent = parameterCalculation.getVecDesignCurrent()
-        let designSiteCurrent = arrDesignCurrent[0]
+        let designSiteCurrent = arrDesignCurrent[siteNumber]
         let designCurrentRatingTemp =
             1.2 * (designSiteCurrent + Number(outData.startingCurrent))
         let designCurrentRating = 0
@@ -265,33 +282,122 @@ Item {
             dialogWarning.visible = true
         }
 
-        outData.electromagneticRelease = String(designCurrentRating)
+        if(siteNumber === 0) {
+            outData.electromagneticRelease = String(designCurrentRating.toFixed(inputData.toFixed))
+
+        }
+
+        return designCurrentRating
     }
 
+    /*******************************************************************************************************/
+
+    //Поиск участка, на котором расположен СП по расстоянию до него
+    /*******************************************************************************************************/
+    function findSite(length) {
+        let arrayLength = parameterCalculation.getVecLengthSite()
+        let arrayLengthSum = []
+
+        let sum = 0
+        for(let item of arrayLength) {
+            sum = sum + item
+            arrayLengthSum.push(sum)
+        }
+
+        for(let i = 0; i < arrayLengthSum.length - 1; ++i) {
+            if(length > arrayLengthSum[i] && length < arrayLengthSum[i + 1]) {
+                return (i + 1)
+            }
+        }
+    }
     /*******************************************************************************************************/
 
     //Расчет секционирующих пунктов
     /*******************************************************************************************************/
     function calculateRecloser() {
+
         let sensitivityCondition = (outData.columnScrollOutput_9.children[numberOfConsumers - 1] / 3 >=
             outData.thermalRelease) ? true : false
+
         if(!sensitivityCondition) {
+
             let activResistanceSum = 0;
             let reactanceSum = 0;
-            for(let n = 0; n < columnScroll_4.children.length; ++n) {
+            for(let n = inputData.siteNumber; n < columnScroll_4.children.length; ++n) {
                 let arrResistance = parameterCalculation.getResistancePhaseZero(columnScroll_4.children[n].currentIndex)
                 activResistanceSum += (arrResistance[0] + arrResistance[1])
                 reactanceSum = +(arrResistance[2] + arrResistance[3])
             }
+
+            let termalRelease = calculateThermalRelease(inputData.siteNumber)
+
             let sensitivityConditionLength = parameterCalculation.calculationRecloser(root.componentTransformApp.transformerResistance,
                                                      activResistanceSum,
                                                      reactanceSum,
-                                                     inputData.thermalRelease)
+                                                     termalRelease)
+
+            sensitivityConditionLength = Math.abs(sensitivityConditionLength)
+
+            let arraySiteLength = parameterCalculation.getVecLengthSite()
+            let arraySiteLengthSum = []
+            let sum = 0
+            for(let item of arraySiteLength) {
+                sum = sum + item
+                arraySiteLengthSum.push(sum)
+            }
+
+            if((inputData.sensitivityConditionLength + sensitivityConditionLength)
+                    < arraySiteLengthSum[inputData.siteNumber]) {
+
+                if(oneIterationOfSectionRecalculation()) { //перерасчет сечения
+                    calculateParametrs()                   //расчет параметров
+                    calculateRecloser()                    //расчет СП
+                } else {
+                    dialogWarning.title = "Невозможно соблюсти условие чувствительности!"
+                    dialogWarning.visible = true
+                }
+            } else {
+                //Расчет следующего СП
+
+                inputData.sensitivityConditionLength += sensitivityConditionLength
+
+                if(inputData.sensitivityConditionLength < arraySiteLengthSum[arraySiteLengthSum.length - 1]) {
+
+                    inputData.arrayRecloserLength.push(inputData.sensitivityConditionLength) //добавление в массив длин СП
+
+                    ++inputData.numberOfReclosers //запись количества СП
+
+                    inputData.siteNumber = findSite(inputData.sensitivityConditionLength)
+
+                    calculateRecloser()
+
+                } else {
+
+                    for(let elem = 0; elem < inputData.arrayRecloserLength.length; ++elem) {
+                        //Определение участка, на котором будет СП
+                        let siteNumber = findSite(inputData.arrayRecloserLength[elem])
+
+                        //Рассчет для каждого СП параметров защиты
+                        let thermalRelease = calculateThermalRelease(siteNumber).toFixed(inputData.toFixed)
+                        let electricalRelease = calculateElectromagneticRelease(siteNumber).toFixed(inputData.toFixed)
+
+                        componentRecloser.createObject(outData.columnScrollOutput_10, {
+                                                       "text": "№" + (elem + 1),
+                                                       "length": inputData.arrayRecloserLength[elem].toFixed(inputData.toFixed),
+                                                       "thermalRelease": thermalRelease,
+                                                       "electricalRelease": electricalRelease
+                                                   })
+                    }
+
+                    return
+                }
+            }
 
         } else {
             //Сообщение, что расчет не требуется
+            console.log("Расчет не требуется")
         }
-    }
+     }
     /*******************************************************************************************************/
 
     //Уточнение результата расчета сечения
@@ -304,18 +410,20 @@ Item {
 
         let hasBeenIncreased = false
         for(let g = numberOfConsumers - 1; g >= 0; --g) {
-            columnScroll_4.children[g].currentIndex -= 1
-            calculateParametrs()
-            let maxLoss =
-                Number(
-                    outData.columnScrollOutput_4_2.children[outData.columnScrollOutput_4_2.children.length - 1].textField
-                    )
-            if(maxLoss > 10) {
-                columnScroll_4.children[g].currentIndex += 1
+            if(columnScroll_4.children[g].currentIndex > 1) {
+                columnScroll_4.children[g].currentIndex -= 1
                 calculateParametrs()
-                break
-            } else {
-                hasBeenIncreased = true
+                let maxLoss =
+                    Number(
+                        outData.columnScrollOutput_4_2.children[outData.columnScrollOutput_4_2.children.length - 1].textField
+                        )
+                if(maxLoss > Number(inputData.percentageLoss)) {
+                    columnScroll_4.children[g].currentIndex += 1
+                    calculateParametrs()
+                    break
+                } else {
+                    hasBeenIncreased = true
+                }
             }
         }
 
@@ -328,6 +436,100 @@ Item {
     }
     /*******************************************************************************************************/
 
+    //Одна итерация перерасчета сечения
+    /*******************************************************************************************************/
+    function oneIterationOfSectionRecalculation() {
+
+        //Находим участок с максимальными потерями
+        let maxLoss = 0
+        let numberSiteMaxLoss = 0
+        for(let i = 0; i < numberOfConsumers; ++i) {
+            if(Number(outData.columnScrollOutput_4_0.children[i].textField) > maxLoss) {
+                maxLoss = Number(outData.columnScrollOutput_4_0.children[i].textField)
+                numberSiteMaxLoss = i
+            }
+        }
+
+        // При первом входе в функцию перерасчета сечений скидываем сечения после участка с максимальными
+        // потерями в минимальные значения
+        if(inputData.isFirstSession) {
+            for(let n = numberSiteMaxLoss + 1; n < numberOfConsumers; ++n) {
+                columnScroll_4.children[n].currentIndex = 1;
+            }
+            inputData.isFirstSession = false
+        }
+
+        //Поднимаем сечения до участка с наибольшими потерями до сечения равного этому участку
+        let state = false //переменная указывает были ли изменено сечение хотя бы на одном участке
+        for(let x = 0; x < numberSiteMaxLoss; ++x) {
+            if(columnScroll_4.children[x].currentIndex < columnScroll_4.children[numberSiteMaxLoss].currentIndex) {
+                 columnScroll_4.children[x].currentIndex = columnScroll_4.children[numberSiteMaxLoss].currentIndex
+                state = true
+            }
+        }
+
+        // Если сечения не были изменены, то поднимаем наименьшее сечение участка с наибольшим индексом, но не выше
+        // сечения первого участка
+        let minSection = 100
+        let numberSiteMinSection = 0
+        if(!state) {
+            //Находим минимальное сечение и номер участка с этим сечением
+            for(let y = 0; y < numberSiteMaxLoss; ++y) {
+                if(columnScroll_4.children[y].currentIndex < minSection) {
+                    minSection = columnScroll_4.children[y].currentIndex
+                    numberSiteMinSection = y
+                }
+            }
+            if((columnScroll_4.children[numberSiteMinSection].currentIndex + 1)
+                    < columnScroll_4.children[0].currentIndex
+                    && columnScroll_4.children[numberSiteMinSection].currentIndex < 10) {
+                columnScroll_4.children[numberSiteMinSection].currentIndex += 1
+                state = true
+            }
+        }
+
+        // Если до участка с макс. потерями все сечения выровнены по этому участку, то поднимаем сечения участков за
+        // ним, но не более сечения этого участка
+        minSection = 100
+        numberSiteMinSection = 0
+        if(!state) {
+            //Находим минимальное сечение и номер участка с этим сечением
+            for(let t = numberSiteMaxLoss + 1; t < numberOfConsumers; ++t) {
+                if(columnScroll_4.children[t].currentIndex < minSection) {
+                    minSection = columnScroll_4.children[t].currentIndex
+                    numberSiteMinSection = t
+                }
+            }
+            if((columnScroll_4.children[numberSiteMinSection].currentIndex + 1)
+                    < columnScroll_4.children[numberSiteMaxLoss].currentIndex
+                    && columnScroll_4.children[numberSiteMinSection].currentIndex < 10) {
+                columnScroll_4.children[numberSiteMinSection].currentIndex += 1
+                state = true
+            }
+        }
+
+        // Если все сечения до и после участка с максимальными потерями выровнены по нему,
+        // то поднимаем сечения на всей линии
+        minSection = 100
+        numberSiteMinSection = 0
+        if(!state) {
+            for(let f = 0; f < numberOfConsumers; ++f) {
+                if(columnScroll_4.children[f].currentIndex < minSection) {
+                    minSection = columnScroll_4.children[f].currentIndex
+                    numberSiteMinSection = f
+                }
+            }
+            if(columnScroll_4.children[numberSiteMinSection].currentIndex < 10) {
+                columnScroll_4.children[numberSiteMinSection].currentIndex += 1
+            } else {
+                return 0
+            }
+        }
+
+        return 1
+    }
+    /*******************************************************************************************************/
+
     //Перерасчет сечений
     /*******************************************************************************************************/
     function recalculateSection() {
@@ -336,107 +538,24 @@ Item {
         let maxVoltageLossPercent =
             outData.columnScrollOutput_4_2.children[outData.columnScrollOutput_4_2.children.length - 1].textField
 
-        if(maxVoltageLossPercent > 10) {
-            //Находим участок с максимальными потерями
-            let maxLoss = 0
-            let numberSiteMaxLoss = 0
-            for(let i = 0; i < numberOfConsumers; ++i) {
-                if(Number(outData.columnScrollOutput_4_0.children[i].textField) > maxLoss) {
-                    maxLoss = Number(outData.columnScrollOutput_4_0.children[i].textField)
-                    numberSiteMaxLoss = i
-                }
-            }
+        if(Number(maxVoltageLossPercent) > Number(inputData.percentageLoss)) {
 
-            // При первом входе в функцию перерасчета сечений скидываем сечения после участка с максимальными
-            // потерями в минимальные значения
-            if(inputData.isFirstSession) {
-                for(let n = numberSiteMaxLoss + 1; n < numberOfConsumers; ++n) {
-                    columnScroll_4.children[n].currentIndex = 1;
-                }
-                inputData.isFirstSession = false
+            if(oneIterationOfSectionRecalculation()) {
+                //Перерасчет параметров линии
+                calculateParametrs()
+                recalculateSection()
+                inputData.needRecalculate = true
+            } else {
+                dialogWarning.title = "Достигнуто максимально возможное сечение провода"
+                dialogWarning.visible = true
+                return
             }
-
-            //Поднимаем сечения до участка с наибольшими потерями до сечения равного этому участку
-            let state = false //переменная указывает были ли изменено сечение хотя бы на одном участке
-            for(let x = 0; x < numberSiteMaxLoss; ++x) {
-                if(columnScroll_4.children[x].currentIndex < columnScroll_4.children[numberSiteMaxLoss].currentIndex) {
-                     columnScroll_4.children[x].currentIndex = columnScroll_4.children[numberSiteMaxLoss].currentIndex
-                    state = true
-                }
-            }
-
-            // Если сечения не были изменены, то поднимаем наименьшее сечение участка с наибольшим индексом, но не выше
-            // сечения первого участка
-            let minSection = 100
-            let numberSiteMinSection = 0
-            if(!state) {
-                for(let y = 0; y < numberSiteMaxLoss; ++y) {
-                    if(columnScroll_4.children[y].currentIndex < minSection) {
-                        minSection = columnScroll_4.children[y].currentIndex
-                        numberSiteMinSection = y
-                    }
-                }
-                if((columnScroll_4.children[numberSiteMinSection].currentIndex + 1)
-                        < columnScroll_4.children[0].currentIndex
-                        && columnScroll_4.children[numberSiteMinSection].currentIndex < 10) {
-                    columnScroll_4.children[numberSiteMinSection].currentIndex += 1
-                    state = true
-                } else {
-                    if(columnScroll_4.children[numberSiteMinSection].currentIndex === 10) {
-                        dialogWarning.title = "Достигнуто максимально возможное сечение провода"
-                        dialogWarning.visible = true
-                        return
-                    }
-                }
-            }
-
-            // Если до участка с макс. потерями все сечения выровнены по этому участку, то поднимаем сечения участков за
-            // ним, но не более сечения этого участка
-            minSection = 100
-            numberSiteMinSection = 0
-            if(!state) {
-                for(let t = numberSiteMaxLoss + 1; t < numberOfConsumers; ++t) {
-                    if(columnScroll_4.children[t].currentIndex < minSection) {
-                        minSection = columnScroll_4.children[t].currentIndex
-                        numberSiteMinSection = t
-                    }
-                }
-                if((columnScroll_4.children[numberSiteMinSection].currentIndex + 1)
-                        < columnScroll_4.children[numberSiteMaxLoss].currentIndex
-                        && columnScroll_4.children[numberSiteMinSection].currentIndex < 10) {
-                    columnScroll_4.children[numberSiteMinSection].currentIndex += 1
-                    state = true
-                } else {
-                    if(columnScroll_4.children[numberSiteMinSection].currentIndex === 10) {
-                        dialogWarning.title = "Достигнуто максимально возможное сечение провода"
-                        dialogWarning.visible = true
-                        return
-                    }
-                }
-            }
-
-            // Если все сечения до и после участка с максимальными потерями выровнены по нему, то начинаем поднимать
-            // сечения на участках до участка с макс. потерями
-            minSection = 100
-            numberSiteMinSection = 0
-            if(!state) {
-                for(let f = 0; f <= numberSiteMaxLoss; ++f) {
-                    if(columnScroll_4.children[f].currentIndex < minSection) {
-                        minSection = columnScroll_4.children[f].currentIndex
-                        numberSiteMinSection = f
-                    }
-                }
-                columnScroll_4.children[numberSiteMinSection].currentIndex += 1
-            }
-
-            //Перерасчет параметров линии
-            calculateParametrs()
-            recalculateSection()
-            inputData.needRecalculate = true
         } else {
-            dialogWarning.title = "Не требуется перерасчет сечения"
-            dialogWarning.visible = true
-            inputData.needRecalculate = false
+            if(inputData.isFirstSession) {
+                dialogWarning.title = "Не требуется перерасчет сечения"
+                dialogWarning.visible = true
+                inputData.needRecalculate = false
+            }
         }
     }
     /*******************************************************************************************************/
@@ -509,12 +628,21 @@ Item {
             outData.columnScrollOutput_9.children[n].destroy()
         }
 
+        for(let x = 0; x < outData.columnScrollOutput_10.children.length; ++x) {
+            outData.columnScrollOutput_10.children[x].destroy()
+        }
+
         outData.fuseRating = ""
         outData.sumDesignCurentConsumer = ""
         outData.thermalRelease = ""
         outData.electromagneticRelease = ""
         outData.resistancePhaseZeroSum = ""
         chartComp.lineSeries.clear()
+
+        inputData.arrayRecloserLength = []          //массив для сохранения расстояний до СП
+        inputData.sensitivityConditionLength = 0    //расстояние до СП
+        inputData.numberOfReclosers = 0             //количество СП
+        inputData.siteNumber = 0                    //номер участка для СП
     }
     /*******************************************************************************************************/
 
@@ -543,6 +671,81 @@ Item {
         id: parameterCalculation
     }
 
+    //Компонент для динамического отображения данных СП
+    /*******************************************************************************************************/
+    Component {
+        id: componentRecloser
+
+        Column {
+
+            topPadding: 10
+            spacing: 10
+
+            property alias text: componentLabelRecloser.text
+            property alias length: componentTextFieldLength.text
+            property alias thermalRelease: componentTextFieldThermalRelease.text
+            property alias electricalRelease: componentTextFieldElectricalRelease.text
+
+            /***********************************************************************************************/
+            Label {
+                id: componentLabelRecloser
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            /***********************************************************************************************/
+
+            /***********************************************************************************************/
+            Row {
+
+                /***********************************************************************************************/
+                Column {
+
+                    leftPadding: 10
+                    spacing: 10
+
+                    Label {
+                        id: labelLength
+                        text: "Расстояние до СП"
+                    }
+                    Label {
+                        id: labelThermalRelease
+                        text: "Тепловой расцепитель"
+                    }
+                    Label {
+                        id: labelElectomagneticRelease
+                        text: "Электромагнитный расцепитель"
+                    }
+                }
+                /***********************************************************************************************/
+
+                /***********************************************************************************************/
+                Column {
+
+                    leftPadding: 10
+                    spacing: 5
+
+                    TextField {
+                        id: componentTextFieldLength
+                        width: 70
+                        placeholderText: "0"
+                    }
+                    TextField {
+                        id: componentTextFieldThermalRelease
+                        width: 70
+                        placeholderText: "0"
+                    }
+                    TextField {
+                        id: componentTextFieldElectricalRelease
+                        width: 70
+                        placeholderText: "0"
+                    }
+                }
+                /***********************************************************************************************/
+            }
+            /***********************************************************************************************/
+        }
+    }
+    /*******************************************************************************************************/
+
     //Компонент для динамического отображения строк
     /*******************************************************************************************************/
     Component {
@@ -561,7 +764,7 @@ Item {
             }
             TextField {
                 id: componentTextFieldLine
-                width: 110
+                width: scrollView1.width - componentLabelLine.width - 45
                 placeholderText: "0"
             }
         }
@@ -590,11 +793,7 @@ Item {
                 id: comboBoxWire
                 textRole: "name"
                 Layout.leftMargin: 0
-
-                /*onAccepted: {
-                    let number = listModelComboWire.get(
-                            comboBoxWire.currentIndex)
-                }*/
+                width: scrollView1.width - componentLabelWire.width - 45
 
                 onCurrentIndexChanged: {
                     if(checkBox3.checkState && checkBox3CheckState) {
@@ -757,7 +956,7 @@ Item {
                         parameterCalculation.calculateResistancePhaseZero(
                                 columnScroll_4.children[sectionNumber].currentIndex, sectionNumber)
                         outData.columnScrollOutput_8.children[sectionNumber].textField = String(
-                                    parameterCalculation.resistancePhaseZero)
+                                    parameterCalculation.resistancePhaseZero.toFixed(inputData.toFixed))
                         inputData.vectorResistancePhaseZero.push(parameterCalculation.resistancePhaseZero)
                         /******************************************************************************************/
 
@@ -780,7 +979,7 @@ Item {
 
                             for (let i = 0; i < numberOfConsumers; ++i) {
                                 outData.columnScrollOutput_9.children[i].textField = String(
-                                            vecSinglePhaseShortCircuit[i]) //заполнение строк
+                                            vecSinglePhaseShortCircuit[i].toFixed(inputData.toFixed)) //заполнение строк
                             }
 
                             //Расчет потерь напряжения и добавление точек на график потерь напряжения
@@ -794,10 +993,10 @@ Item {
                                         columnScroll_4.children[y].currentIndex, y)
                                 sumVoltageLoss += voltageLoss
                                 arrayVoltageLoss.push(sumVoltageLoss)
-                                outData.columnScrollOutput_4.children[y].textField = String(voltageLoss)
-                                outData.columnScrollOutput_4_0.children[y].textField = String(voltageLoss * 100 / 380)
-                                outData.columnScrollOutput_4_1.children[y].textField = String(sumVoltageLoss)
-                                outData.columnScrollOutput_4_2.children[y].textField = String(sumVoltageLoss * 100 / 380)
+                                outData.columnScrollOutput_4.children[y].textField = String(voltageLoss.toFixed(inputData.toFixed))
+                                outData.columnScrollOutput_4_0.children[y].textField = String((voltageLoss * 100 / 380).toFixed(inputData.toFixed))
+                                outData.columnScrollOutput_4_1.children[y].textField = String(sumVoltageLoss.toFixed(inputData.toFixed))
+                                outData.columnScrollOutput_4_2.children[y].textField = String((sumVoltageLoss * 100 / 380).toFixed(inputData.toFixed))
                                 chartComp.lineSeries.append(y + 1, sumVoltageLoss)
                             }
                             maxValue = Math.max(...arrayVoltageLoss)
@@ -879,32 +1078,32 @@ Item {
             let str = "№" + (i + 1)
             componentLine.createObject(outData.columnScrollOutput_1, {
                                            "text": str,
-                                           "textField": vectorSiteLoads[i]
+                                           "textField": vectorSiteLoads[i].toFixed(inputData.toFixed)
                                        })
             componentLine.createObject(outData.columnScrollOutput_2, {
                                            "text": str,
-                                           "textField": vectorFullPower[i]
+                                           "textField": vectorFullPower[i].toFixed(inputData.toFixed)
                                        })
             componentLine.createObject(outData.columnScrollOutput_3, {
                                            "text": str,
-                                           "textField": vectorWeightedAverage[i]
+                                           "textField": vectorWeightedAverage[i].toFixed(inputData.toFixed)
                                        })
             componentLine.createObject(outData.columnScrollOutput_3_1, {
                                            "text": str,
-                                           "textField": vectorDesignCurrent[i]
+                                           "textField": vectorDesignCurrent[i].toFixed(inputData.toFixed)
                                        })
             componentLine.createObject(outData.columnScrollOutput_3_2, {
                                            "text": str,
-                                           "textField": vectorDesignCurrentConsumer[i]
+                                           "textField": vectorDesignCurrentConsumer[i].toFixed(inputData.toFixed)
                                        })
 
             componentLine.createObject(outData.columnScrollOutput_5, {
                                            "text": str,
-                                           "textField": vectorEquivalentPower[i]
+                                           "textField": vectorEquivalentPower[i].toFixed(inputData.toFixed)
                                        })
             componentLine.createObject(outData.columnScrollOutput_6, {
                                            "text": str,
-                                           "textField": vectorEquivalentCurrent[i]
+                                           "textField": vectorEquivalentCurrent[i].toFixed(inputData.toFixed)
                                        })
             componentEconomicSection.createObject(outData.columnScrollOutput_7,
                                                   {
@@ -920,7 +1119,7 @@ Item {
                     objectComponent.textField = ""
                 } else {
                     objectComponent.text = str
-                    objectComponent.textField = number
+                    objectComponent.textField = number.toFixed(inputData.toFixed)
                 }
                 return objectComponent
             }
@@ -1171,38 +1370,21 @@ Item {
                 text: qsTr("Ввод")
 
                 onClicked: {
-                    calculateParametrs()
 
-                    //Перерасчет сечения по максимальному отклонению, если поставлен флаг в checkBox2
-                    if(checkBox2.checkState) {
-                        recalculateSection()
-                        refineLosses()
+                    if(calculateParametrs()) {
+                        //Перерасчет сечения по максимальному отклонению, если поставлен флаг в checkBox2
+                        if(checkBox2.checkState) {
+                            recalculateSection()
+                            refineLosses()
+                        }
+
+                        //Рассчет расстояний до СП
+                        if(checkBox1.checkState) {
+                            calculateRecloser()
+                        }
                     }
                 }
             }
-
-            //Диалог о незаполненных полях
-            /**********************************************************************************************************/
-            Dialog {
-                id: dialogWarning
-                modal: true
-                title: qsTr("Заполнены не все поля!")
-                closePolicy: Popup.CloseOnEscape
-                palette.button: "#26972D"
-                palette.window: "#67E46F"
-                DialogButtonBox {
-                    anchors.centerIn: parent
-                    Layout.alignment: Qt.AlignHCenter
-                    standardButtons: DialogButtonBox.Ok
-                    onAccepted: {
-                        dialogWarning.visible = false
-                    }
-                }
-
-                parent: inputData
-                anchors.centerIn: inputData
-            }
-            /**********************************************************************************************************/
 
             //Блок "Линия"
             /**********************************************************************************************************/
@@ -1570,6 +1752,7 @@ Item {
                             if(checkBox1.checkState > 0) {
                                 checkBox2.checkState = 0
                                 checkBox3.checkState = 0
+                                textFieldCheckBox2.enabled = false
                             }
                         }
                     }
@@ -1585,6 +1768,7 @@ Item {
                                 if(checkBox2.checkState > 0) {
                                     checkBox1.checkState = 0
                                     checkBox3.checkState = 0
+                                    textFieldCheckBox2.enabled = true
                                 }
                             }
                         }
@@ -1596,7 +1780,8 @@ Item {
                         TextField {
                             id: textFieldCheckBox2
                             Layout.maximumWidth: 30
-                            placeholderText: qsTr("10")
+                            placeholderText: qsTr("0")
+                            enabled: false
                         }
 
                         Label {
@@ -1607,11 +1792,12 @@ Item {
                     CheckBox {
                         id: checkBox3
                         checkState: Qt.Checked
-                        text: qsTr("Автоматический расчет сечения")
+                        text: qsTr("Расчет по экономической плотности тока")
                         onCheckStateChanged: {
                             if(checkBox3.checkState > 0) {
                                 checkBox2.checkState = 0
                                 checkBox1.checkState = 0
+                                textFieldCheckBox2.enabled = false
                             }
 
                             //Сброс данных

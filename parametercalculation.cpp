@@ -307,3 +307,7 @@ QVector<double> ParameterCalculation::getResistancePhaseZero(int index) {
     resistance.push_back(m_vecResistanceWire[index].reactanceZero);
     return resistance;
 }
+
+QVector<double> ParameterCalculation::getVecLengthSite() const {
+    return m_vecLengthSite;
+}
