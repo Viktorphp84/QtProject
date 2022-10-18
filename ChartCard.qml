@@ -6,9 +6,10 @@ import Qt5Compat.GraphicalEffects
 Item {
     property var lineSeries: lineSeriesChart
     property alias maxAxisX: valueAxisX.max
-    property alias tickCountX: valueAxisX.tickCount
+    //property alias tickCountX: valueAxisX.tickCount
     property alias maxAxisY: valueAxisY.max
     property alias tickCountY: valueAxisY.tickCount
+    property alias categoryAxis: valueAxisX
 
     //Переменные для сохранения позиции и размера окна при развертываниии на весь экран
     property int chartX: 0
@@ -47,14 +48,14 @@ Item {
             locale: Qt.locale("en")
             antialiasing: true
 
-            ValuesAxis {
-                id: valueAxisX
-                min: 0
-                max: 10
-                tickCount: 11
-                titleText: "Участки"
-                labelFormat: "%.0f"
-            }
+//            ValuesAxis {
+//                id: valueAxisX
+//                min: 0
+//                max: 10
+//                tickCount: 11
+//                titleText: "Участки"
+//                labelFormat: "%.0f"
+//            }
 
             ValuesAxis {
                 id: valueAxisY
@@ -65,6 +66,63 @@ Item {
                 labelFormat: "%.0f"
             }
 
+            CategoryAxis {
+                id: valueAxisX
+                min: 0
+                max: 10
+
+                CategoryRange {
+                    label: "1"
+                    endValue: 1
+
+                }
+                CategoryRange {
+                    label: "2"
+                    endValue: 2
+
+                }
+                CategoryRange {
+                    label: "3"
+                    endValue: 3
+
+                }
+                CategoryRange {
+                    label: "4"
+                    endValue: 4
+
+                }
+                CategoryRange {
+                    label: "5"
+                    endValue: 5
+
+                }
+                CategoryRange {
+                    label: "6"
+                    endValue: 6
+
+                }
+                CategoryRange {
+                    label: "7"
+                    endValue: 7
+
+                }
+                CategoryRange {
+                    label: "8"
+                    endValue: 8
+
+                }
+                CategoryRange {
+                    label: "9"
+                    endValue: 9
+
+                }
+                CategoryRange {
+                    label: "10"
+                    endValue: 10
+
+                }
+            }
+
             width: parent.width
             height: parent.height
 
@@ -73,6 +131,7 @@ Item {
                 axisX: valueAxisX
                 axisY: valueAxisY
                 name: "График отклонения напряжения"
+
             }
         }
 

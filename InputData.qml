@@ -192,7 +192,7 @@ Item {
             outData.startingCurrent = String(startingCurrent.toFixed(inputData.toFixed))
             calculateFuse()
             calculateThermalRelease(0)
-            calculateElectromagneticRelease()
+            calculateElectromagneticRelease(0)
         }
     }
     /*******************************************************************************************************/
@@ -349,13 +349,21 @@ Item {
             if((inputData.sensitivityConditionLength + sensitivityConditionLength)
                     < arraySiteLengthSum[inputData.siteNumber]) {
 
-                if(oneIterationOfSectionRecalculation()) { //перерасчет сечения
+                let flag = false
+                if(switchRecloser.checked) {
+                    flag = oneIterationOfSectionRecalculation()
+                }
+
+                if(flag) { //перерасчет сечения
                     calculateParametrs()                   //расчет параметров
                     calculateRecloser()                    //расчет СП
                 } else {
                     dialogWarning.title = "Невозможно соблюсти условие чувствительности!"
                     dialogWarning.visible = true
+
+                    return
                 }
+
             } else {
                 //Расчет следующего СП
 
@@ -385,7 +393,8 @@ Item {
                                                        "text": "№" + (elem + 1),
                                                        "length": inputData.arrayRecloserLength[elem].toFixed(inputData.toFixed),
                                                        "thermalRelease": thermalRelease,
-                                                       "electricalRelease": electricalRelease
+                                                       "electricalRelease": electricalRelease,
+                                                       "siteNumber": siteNumber + 1
                                                    })
                     }
 
@@ -395,7 +404,11 @@ Item {
 
         } else {
             //Сообщение, что расчет не требуется
-            console.log("Расчет не требуется")
+
+            dialogWarning.title = "Установка СП не требуется!"
+            dialogWarning.visible = true
+
+            return
         }
      }
     /*******************************************************************************************************/
@@ -685,6 +698,7 @@ Item {
             property alias length: componentTextFieldLength.text
             property alias thermalRelease: componentTextFieldThermalRelease.text
             property alias electricalRelease: componentTextFieldElectricalRelease.text
+            property alias siteNumber:  componentTextFieldSiteNumber.text
 
             /***********************************************************************************************/
             Label {
@@ -703,15 +717,15 @@ Item {
                     spacing: 10
 
                     Label {
-                        id: labelLength
                         text: "Расстояние до СП"
                     }
                     Label {
-                        id: labelThermalRelease
+                        text: "Номер участка"
+                    }
+                    Label {
                         text: "Тепловой расцепитель"
                     }
                     Label {
-                        id: labelElectomagneticRelease
                         text: "Электромагнитный расцепитель"
                     }
                 }
@@ -729,6 +743,11 @@ Item {
                         placeholderText: "0"
                     }
                     TextField {
+                        id: componentTextFieldSiteNumber
+                        width: 70
+                        placeholderText: "0"
+                    }
+                    TextField {
                         id: componentTextFieldThermalRelease
                         width: 70
                         placeholderText: "0"
@@ -737,7 +756,7 @@ Item {
                         id: componentTextFieldElectricalRelease
                         width: 70
                         placeholderText: "0"
-                    }
+                    }   
                 }
                 /***********************************************************************************************/
             }
@@ -1425,6 +1444,13 @@ Item {
                     font.pointSize: 10
                 }
 
+                Component {
+                    id: componentCategoryRange
+                    CategoryRange {
+
+                    }
+                }
+
                 TextField {
                     id: textFieldNumberConsumer
                     anchors.left: labelNumberConsumer.right
@@ -1438,8 +1464,16 @@ Item {
                         clearData()
                         loadLine(displayText)
 
-                        chartComp.maxAxisX = parameterCalculation.numberOfConsumers
-                        chartComp.tickCountX = parameterCalculation.numberOfConsumers + 1
+                        for(let i = 1; i <= 10; ++i) {
+                            chartComp.categoryAxis.remove(String(i))
+                        }
+
+                        chartComp.maxAxisX = numberOfConsumers
+
+                        for(let f = 1; f <= numberOfConsumers; ++f) {
+                            chartComp.categoryAxis.append(String(f), f)
+                        }
+
                         parameterCalculation.fillingResistanceVectorPhaseZero()
                     }
                 }
@@ -1740,22 +1774,48 @@ Item {
                 anchors.left: item3.right
                 anchors.right: parent.right
                 anchors.bottom: rowRect.top
+                anchors.topMargin: -10
 
                 ColumnLayout {
                     anchors.centerIn: parent
+                    spacing: 15
 
-                    CheckBox {
-                        id: checkBox1
-                        text: qsTr("Расчет секционирующих пунктов")
+                    /******************************************************************************************/
+                    RowLayout {
+                        spacing: 30
+                        Layout.bottomMargin: -5
 
-                        onCheckStateChanged: {
-                            if(checkBox1.checkState > 0) {
-                                checkBox2.checkState = 0
-                                checkBox3.checkState = 0
-                                textFieldCheckBox2.enabled = false
+                        CheckBox {
+                            id: checkBox1
+                            text: qsTr("Расчет секционирующих пунктов")
+
+                            onCheckStateChanged: {
+                                if(checkBox1.checkState > 0) {
+                                    checkBox2.checkState = 0
+                                    checkBox3.checkState = 0
+                                    textFieldCheckBox2.enabled = false
+                                }
+                            }
+                        }
+
+                        ColumnLayout {
+
+                            Layout.topMargin: -13
+
+                            Text {
+                                text: "Перерасчет сечения"
+                                font.pointSize: 7
+                                Layout.leftMargin: -10
+                            }
+
+                            Switch {
+                                id: switchRecloser
+
                             }
                         }
                     }
+
+                    /******************************************************************************************/
 
                     RowLayout {
                         spacing: 5
@@ -1788,6 +1848,8 @@ Item {
                             text: "%"
                         }
                     }
+
+                    /******************************************************************************************/
 
                     CheckBox {
                         id: checkBox3
