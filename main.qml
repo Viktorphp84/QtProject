@@ -12,7 +12,6 @@ ApplicationWindow {
 
     property string number: modalTextInput.displayText
     property int numInt: parseInt(number)
-    property alias visibleDialogOver_240: dialogSectionOver_240.visible
     property var componentTransformApp
     property var componentCardsApp: []
 
@@ -36,35 +35,6 @@ ApplicationWindow {
         modalDialog.accept()
     }
 
-    //Сообщение о том, что сечение провода больше 240 мм.кв.
-    /*******************************************************************************************************/
-    Dialog {
-        id: dialogSectionOver_240
-        anchors.centerIn: parent
-        modal: true
-        contentItem: Text {
-            text: qsTr("Сечение провода превышает 240 мм<sup>2</sup>!")
-            textFormat: Text.RichText
-        }
-        width: 220
-        height: 80
-
-        closePolicy: Popup.CloseOnEscape
-        palette.button: "#26972D"
-        palette.window: "#67E46F"
-
-        DialogButtonBox {
-            anchors.bottom: parent.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 40
-            Layout.alignment: Qt.AlignHCenter
-            standardButtons: DialogButtonBox.Ok
-            onAccepted: {
-                dialogSectionOver_240.visible = false
-            }
-        }
-    }
     /*******************************************************************************************************/
 
     Rectangle {
@@ -150,7 +120,7 @@ ApplicationWindow {
                 y: inpData.height
             }
 
-            //Диалог о незаполненных полях
+            //Диалог с сообщениями пользователю
             /**********************************************************************************************************/
             Dialog {
                 id: dialogWarning
@@ -168,8 +138,6 @@ ApplicationWindow {
                     }
                 }
 
-                //parent: inputData
-
                 x: root.width / 2 - dialogWarning.width / 2
                 y: root.height / 2 - dialogWarning.height / 2
             }
@@ -177,6 +145,8 @@ ApplicationWindow {
         }
     }
 
+    //Стартовый диалог программы
+    /*****************************************************************************************************************/
     Dialog {
         id: modalDialog
         modal: true
@@ -212,9 +182,17 @@ ApplicationWindow {
                 placeholderText: "0"
                 Layout.alignment: Qt.AlignHCenter
                 maximumLength: 2
+                validator: RegularExpressionValidator {
+                    regularExpression: /[1-9]{1,2}[0]{0,1}/
+                }
 
                 Keys.onReturnPressed: onAcceptedDialog()
                 Keys.onEnterPressed: onAcceptedDialog()
+
+                //Установка фокуса на текстовое поле
+                Component.onCompleted: {
+                    modalTextInput.forceActiveFocus()
+                }
             }
 
             DialogButtonBox {

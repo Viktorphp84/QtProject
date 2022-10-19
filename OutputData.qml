@@ -672,7 +672,7 @@ Item {
                 anchors.top: labelProtectionDevice.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 15
+                anchors.leftMargin: 20
                 text: qsTr("Номинальный ток предохранителя на ТП, А")
             }
 
@@ -681,7 +681,8 @@ Item {
                 anchors.verticalCenter: labelFuse.verticalCenter
                 anchors.left: labelFuse.right
                 anchors.topMargin: 10
-                anchors.leftMargin: 70
+                anchors.leftMargin: 100
+                readOnly: true
             }
             /*******************************************************************/
 
@@ -690,7 +691,7 @@ Item {
                 anchors.top: labelFuse.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 15
+                anchors.leftMargin: 20
                 text: qsTr("Номинальный ток теплового расцепителя на ТП, А")
             }
 
@@ -699,6 +700,7 @@ Item {
                 anchors.verticalCenter: labelThermalRelease.verticalCenter
                 anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
+                readOnly: true
             }
             /*******************************************************************/
 
@@ -707,7 +709,7 @@ Item {
                 anchors.top: labelThermalRelease.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 15
+                anchors.leftMargin: 20
                 text: qsTr("Номинальный ток электромагнитного расцепителя на ТП, А")
             }
 
@@ -716,6 +718,7 @@ Item {
                 anchors.verticalCenter: labelElectromagneticRelease.verticalCenter
                 anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
+                readOnly: true
             }
             /*******************************************************************/
 
@@ -724,7 +727,7 @@ Item {
                 anchors.top: labelElectromagneticRelease.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 15
+                anchors.leftMargin: 20
                 text: qsTr("Номинальный ток электродвигателя, А")
             }
 
@@ -733,6 +736,7 @@ Item {
                 anchors.verticalCenter: labelEngine.verticalCenter
                 anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
+                readOnly: true
             }
             /*******************************************************************/
 
@@ -741,7 +745,7 @@ Item {
                 anchors.top: labelEngine.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 15
+                anchors.leftMargin: 20
                 text: qsTr("Пусковой ток электродвигателя, А")
             }
 
@@ -750,6 +754,7 @@ Item {
                 anchors.verticalCenter: labelStartingCurrent.verticalCenter
                 anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
+                readOnly: true
             }
 
             /*******************************************************************/
@@ -759,7 +764,7 @@ Item {
                 anchors.top: labelStartingCurrent.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 15
+                anchors.leftMargin: 20
                 text: qsTr("Суммарный расчетный ток нагрузок, А")
             }
 
@@ -768,6 +773,7 @@ Item {
                 anchors.verticalCenter: labelDesignCurrentConsumerSum.verticalCenter
                 anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
+                readOnly: true
             }
 
             /*******************************************************************/
@@ -777,7 +783,7 @@ Item {
                 anchors.top: labelDesignCurrentConsumerSum.bottom
                 anchors.left: parent.left
                 anchors.topMargin: 10
-                anchors.leftMargin: 15
+                anchors.leftMargin: 20
                 text: qsTr("Суммарное сопротивление петли фаза-ноль, Ом")
             }
 
@@ -786,6 +792,7 @@ Item {
                 anchors.verticalCenter: labelResistancePhaseZeroSum.verticalCenter
                 anchors.horizontalCenter: textFieldFuse.horizontalCenter
                 anchors.topMargin: 10
+                readOnly: true
             }
         }
     }

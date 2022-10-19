@@ -21,10 +21,15 @@ Item {
     property alias transformerResistance: textFieldTransformerResistance.text
     property alias connectionDiagram: textFieldConnectionDiagram.text
     property alias transformerPower: textFieldTransformerPower.text
-    property double sumDesignCurrentConsumer: 0
-    property double startingCurrentRatio: 0
-    property double engineType: 0
-    property double startingCurrent: 0
+    property double sumDesignCurrentConsumer: 0 //суммарный расчетный ток потребителей
+
+    //Двигатель
+    property double startingCurrentRatio: 0 //кратность пускового тока
+    property double engineType: 0           //тип двигателя
+    property double startingCurrent: 0      //пусковой ток
+    property double ratedEngineCurrent: 0   //номинальный ток электродвигателя
+
+
     property int temp: 0 //переменная для сравнения текущего количества потребителей и введенного
     property bool checkBox3CheckState: true //дополнительная переменная для снятия ограничения на выбор элементов в comboBoxFire
     property double thermalRelease: 0
@@ -105,6 +110,8 @@ Item {
             let vectorEquivalentPower = parameterCalculation.getVecEquivalentPower()
             let vectorEquivalentCurrent = parameterCalculation.getVecEquivalentCurrent()
 
+            //Расчет параметров двигателя
+            calculateEngin()
             //Расчет предохранителя
             calculateFuse()
             //Расчет теплового расцепителя
@@ -186,6 +193,7 @@ Item {
 
         if(enginePower && efficiencyFactor && engineCos && startingCurrentRatio) {
             let ratedEngineCurrent = enginePower / (Math.sqrt(3) * engineCos * 0.38 * efficiencyFactor)
+            inputData.ratedEngineCurrent = ratedEngineCurrent
             outData.ratedEngineCurrent = String(ratedEngineCurrent.toFixed(inputData.toFixed))
             let startingCurrent = startingCurrentRatio * ratedEngineCurrent
             inputData.startingCurrent = startingCurrent
@@ -212,11 +220,11 @@ Item {
         let arrayRatedCurrentFuse = [2, 4, 6.3, 10, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160,
                                      200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500]
 
-        let fuseRatingTemp = inputData.sumDesignCurrentConsumer >= temp ? inputData.sumDesignCurrentConsumer : temp
+        //let fuseRatingTemp = inputData.sumDesignCurrentConsumer >= temp ? inputData.sumDesignCurrentConsumer : temp
         let fuseRating = 0
 
         for(let i = 0; i < arrayRatedCurrentFuse.length - 1; ++i) {
-            if((fuseRatingTemp > arrayRatedCurrentFuse[i]) && (fuseRatingTemp <= arrayRatedCurrentFuse[i + 1])) {
+            if((temp > arrayRatedCurrentFuse[i]) && (temp <= arrayRatedCurrentFuse[i + 1])) {
                 fuseRating = arrayRatedCurrentFuse[i + 1]
             }
         }
@@ -239,7 +247,7 @@ Item {
         let arrDesignCurrent = parameterCalculation.getVecDesignCurrent()
         let designSiteCurrent = arrDesignCurrent[siteNumber]
         let designCurrentRatingTemp =
-            1.1 * (designSiteCurrent - Number(outData.enginCurrent) + 0.4 * Number(outData.startingCurrent))
+            1.1 * (designSiteCurrent - inputData.ratedEngineCurrent + 0.4 * inputData.startingCurrent)
         let designCurrentRating = 0
         for(let n = 0; n < arrThermalRelease.length - 1; ++n) {
             if((designCurrentRatingTemp > arrThermalRelease[n]) && (designCurrentRatingTemp <= arrThermalRelease[n + 1])) {
@@ -269,7 +277,7 @@ Item {
         let arrDesignCurrent = parameterCalculation.getVecDesignCurrent()
         let designSiteCurrent = arrDesignCurrent[siteNumber]
         let designCurrentRatingTemp =
-            1.2 * (designSiteCurrent + Number(outData.startingCurrent))
+            1.2 * (designSiteCurrent + inputData.startingCurrent)
         let designCurrentRating = 0
         for(let n = 0; n < arrThermalRelease.length - 1; ++n) {
             if((designCurrentRatingTemp > arrThermalRelease[n]) && (designCurrentRatingTemp <= arrThermalRelease[n + 1])) {
@@ -289,7 +297,6 @@ Item {
 
         return designCurrentRating
     }
-
     /*******************************************************************************************************/
 
     //Поиск участка, на котором расположен СП по расстоянию до него
@@ -559,13 +566,13 @@ Item {
                 recalculateSection()
                 inputData.needRecalculate = true
             } else {
-                dialogWarning.title = "Достигнуто максимально возможное сечение провода"
+                dialogWarning.title = "Достигнуто максимально возможное сечение провода!"
                 dialogWarning.visible = true
                 return
             }
         } else {
             if(inputData.isFirstSession) {
-                dialogWarning.title = "Не требуется перерасчет сечения"
+                dialogWarning.title = "Не требуется перерасчет сечения!"
                 dialogWarning.visible = true
                 inputData.needRecalculate = false
             }
@@ -650,7 +657,14 @@ Item {
         outData.thermalRelease = ""
         outData.electromagneticRelease = ""
         outData.resistancePhaseZeroSum = ""
+        outData.ratedEngineCurrent = ""
+        outData.startingCurrent = ""
         chartComp.lineSeries.clear()
+
+        inputData.startingCurrentRatio = 0          //кратность пускового тока
+        inputData.startingCurrent = 0               //пусковой ток
+        inputData.engineType = 0                    //тип двигателя
+        inputData.ratedEngineCurrent = 0            //номинальный ток электродвигателя
 
         inputData.arrayRecloserLength = []          //массив для сохранения расстояний до СП
         inputData.sensitivityConditionLength = 0    //расстояние до СП
@@ -773,6 +787,8 @@ Item {
         Row {
             property alias text: componentLabelLine.text
             property alias textField: componentTextFieldLine.text
+            property alias validator: componentTextFieldLine.validator
+            property alias readOnly: componentTextFieldLine.readOnly
 
             leftPadding: 10
             spacing: 10
@@ -781,6 +797,7 @@ Item {
             Label {
                 id: componentLabelLine
             }
+
             TextField {
                 id: componentTextFieldLine
                 width: scrollView1.width - componentLabelLine.width - 45
@@ -1048,6 +1065,7 @@ Item {
             TextField {
                 id: textFieldEconomicSection
                 placeholderText: "0"
+                readOnly: true
             }
         }
     }
@@ -1069,9 +1087,18 @@ Item {
 
         for (let i = 0; i < num; ++i) {
             let str = "№" + (i + 1)
-            componentLine.createObject(columnScroll_1, {"text": str})
-            componentLine.createObject(columnScroll_2, {"text": str})
-            componentLine.createObject(columnScroll_3, {"text": str})
+            componentLine.createObject(columnScroll_1, {
+                                           "text": str,
+                                           "validator": comboBoxConsum.currentIndex? validatorOver2kW : validatorUpTo2kW
+                                       })
+            componentLine.createObject(columnScroll_2, {
+                                           "text": str,
+                                           "validator": validatorLength
+                                       })
+            componentLine.createObject(columnScroll_3, {
+                                           "text": str,
+                                           "validator": validatorCos
+                                       })
             componentWire.createObject(columnScroll_4, {"text": str})
         }
     }
@@ -1097,32 +1124,39 @@ Item {
             let str = "№" + (i + 1)
             componentLine.createObject(outData.columnScrollOutput_1, {
                                            "text": str,
-                                           "textField": vectorSiteLoads[i].toFixed(inputData.toFixed)
+                                           "textField": vectorSiteLoads[i].toFixed(inputData.toFixed),
+                                           "readOnly": true
                                        })
             componentLine.createObject(outData.columnScrollOutput_2, {
                                            "text": str,
-                                           "textField": vectorFullPower[i].toFixed(inputData.toFixed)
+                                           "textField": vectorFullPower[i].toFixed(inputData.toFixed),
+                                           "readOnly": true
                                        })
             componentLine.createObject(outData.columnScrollOutput_3, {
                                            "text": str,
-                                           "textField": vectorWeightedAverage[i].toFixed(inputData.toFixed)
+                                           "textField": vectorWeightedAverage[i].toFixed(inputData.toFixed),
+                                           "readOnly": true
                                        })
             componentLine.createObject(outData.columnScrollOutput_3_1, {
                                            "text": str,
-                                           "textField": vectorDesignCurrent[i].toFixed(inputData.toFixed)
+                                           "textField": vectorDesignCurrent[i].toFixed(inputData.toFixed),
+                                           "readOnly": true
                                        })
             componentLine.createObject(outData.columnScrollOutput_3_2, {
                                            "text": str,
-                                           "textField": vectorDesignCurrentConsumer[i].toFixed(inputData.toFixed)
+                                           "textField": vectorDesignCurrentConsumer[i].toFixed(inputData.toFixed),
+                                           "readOnly": true
                                        })
 
             componentLine.createObject(outData.columnScrollOutput_5, {
                                            "text": str,
-                                           "textField": vectorEquivalentPower[i].toFixed(inputData.toFixed)
+                                           "textField": vectorEquivalentPower[i].toFixed(inputData.toFixed),
+                                           "readOnly": true
                                        })
             componentLine.createObject(outData.columnScrollOutput_6, {
                                            "text": str,
-                                           "textField": vectorEquivalentCurrent[i].toFixed(inputData.toFixed)
+                                           "textField": vectorEquivalentCurrent[i].toFixed(inputData.toFixed),
+                                           "readOnly": true
                                        })
             componentEconomicSection.createObject(outData.columnScrollOutput_7,
                                                   {
@@ -1188,10 +1222,40 @@ Item {
 
     /*******************************************************************************************************/
     Rectangle {
-        id: rectangle
+        id: rectangleInputData
+
+        property bool activeFocusOnWindow: {inpData.z > chartComp.z &&
+                                            inpData.z > outData.z &&
+                                            inpData.z > canvCard.z}
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 7
+            anchors.leftMargin: 7
+            height: 5
+            color: "red"
+
+            MouseArea {
+                anchors.fill: parent
+                property double clickPosBottom
+
+                onPressed: {
+                    if(rectangleInputData.activeFocusOnWindow) {
+                        clickPosBottom = parent.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+
+                }
+            }
+        }
+
+
+
         anchors.fill: parent
-        //width: parent.width
-        //height: parent.height
         color: "#ffffff"
         radius: 5
         border.color: "#d1d1d1"
@@ -1384,9 +1448,10 @@ Item {
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 anchors.leftMargin: 20
-                width: 70
+                width: 90
                 height: 30
-                text: qsTr("Ввод")
+                text: qsTr("Рассчитать")
+                font.bold: true
 
                 onClicked: {
 
@@ -1430,6 +1495,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Линия")
                     font.pointSize: 14
+                    font.bold: true
                 }
 
 
@@ -1444,6 +1510,7 @@ Item {
                     font.pointSize: 10
                 }
 
+                //Ось X для графика
                 Component {
                     id: componentCategoryRange
                     CategoryRange {
@@ -1458,6 +1525,10 @@ Item {
                     anchors.leftMargin: 20
                     layer.enabled: false
                     placeholderText: qsTr("0")
+                    validator: RegularExpressionValidator {
+                        regularExpression: /([1-9]{1,2})|([0]{1})/
+                    }
+
                     onAccepted: {
                         parameterCalculation.numberOfConsumers = displayText
                         parameterCalculation.clearVectors()//обнуление векторов в классе C++
@@ -1487,6 +1558,29 @@ Item {
                     font.pointSize: 10
                     font.family: "Arial"
                 }
+
+                /**************************************************************************************/
+                RegularExpressionValidator {
+                    id: validatorUpTo2kW
+                    regularExpression: /([1]{1}[.][0-9]{0,6})|([0-2]{1})|([0]{1}[.][0-9]{0,6})/
+                }
+
+                RegularExpressionValidator {
+                    id: validatorOver2kW
+                    regularExpression: /([1-9]{1,3}[0]{0,2}[.][0-9]{0,6})|([0]{0,1}[.][0-9]{0,6})/
+                }
+
+                RegularExpressionValidator {
+                    id: validatorLength
+                    regularExpression: /([1-9]{1,2}[0]{0,1}[.][0-9]{0,6})|([0]{0,1}[.][0-9]{0,6})/
+                }
+
+                RegularExpressionValidator {
+                    id: validatorCos
+                    regularExpression: /([0]{1}[.][0-9]{0,6})|([1]{1})/
+                }
+
+                /**************************************************************************************/
 
                 ComboBox {
                     id: comboBoxConsum
@@ -1520,6 +1614,18 @@ Item {
                             text: modelData
                         }
                     }
+
+                    onActivated: {
+                        if(currentIndex == 0) {
+                            for(let i = 0; i < numberOfConsumers; ++i) {
+                                columnScroll_1.children[i].validator = validatorUpTo2kW
+                            }
+                        } else {
+                            for(let x = 0; x < numberOfConsumers; ++x) {
+                                columnScroll_1.children[x].validator = validatorOver2kW
+                            }
+                        }
+                    }
                 }
             }
             /**********************************************************************************************************/
@@ -1548,6 +1654,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Питающий трансформатор")
                         font.pointSize: 14
+                        font.bold: true
                     }
 
                     GridLayout {
@@ -1583,24 +1690,6 @@ Item {
                             Layout.maximumWidth: 80
                             readOnly: true
                         }
-
-                        /*ComboBox {
-                            id: comboBox1
-
-                            model: ListModel {
-                                id: comboSchemeConnectModel
-
-                                ListElement {
-                                    name: "Y/Y0"
-                                }
-                                ListElement {
-                                    name: "Y/Z0"
-                                }
-                                ListElement {
-                                    name: "\u0394/Y0"
-                                }
-                            }
-                        }*/
 
                         Label {
                             id: labelTransformerPower
@@ -1644,6 +1733,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Двигатель")
                     font.pointSize: 14
+                    font.bold: true
                 }
 
                 /*********************************************************/
@@ -1661,10 +1751,6 @@ Item {
                     anchors.verticalCenter:labelEnginePower.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
-
-                    onTextEdited: {
-                        calculateEngin()
-                    }
                 }
 
                 /*********************************************************/
@@ -1682,10 +1768,6 @@ Item {
                     anchors.verticalCenter: labelEfficiencyFactor.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
-
-                    onTextEdited: {
-                        calculateEngin()
-                    }
                 }
 
                 /*********************************************************/
@@ -1703,10 +1785,6 @@ Item {
                     anchors.verticalCenter: labelEngineCos.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
-
-                    onTextEdited: {
-                        calculateEngin()
-                    }
                 }
 
                 /*********************************************************/
@@ -1724,10 +1802,6 @@ Item {
                     anchors.verticalCenter: labelStartingCurrentRatio.verticalCenter
                     anchors.rightMargin: 5
                     placeholderText: qsTr("0")
-
-                    onTextEdited: {
-                        calculateEngin()
-                    }
                 }
 
                 /*********************************************************/
@@ -1757,10 +1831,6 @@ Item {
                         Text {
                             text: modelData
                         }
-                    }
-
-                    onActivated: {
-                        calculateEngin()
                     }
                 }
             }
@@ -1853,7 +1923,7 @@ Item {
 
                     CheckBox {
                         id: checkBox3
-                        checkState: Qt.Checked
+                        //checkState: Qt.Checked
                         text: qsTr("Расчет по экономической плотности тока")
                         onCheckStateChanged: {
                             if(checkBox3.checkState > 0) {
@@ -1864,14 +1934,16 @@ Item {
 
                             //Сброс данных
                             /*******************************************************************************************/
-                            parameterCalculation.clearVectors()//обнуление векторов в классе C++
-                            clearData()
+                            if(checkState) {
+                                //parameterCalculation.clearVectors()//обнуление векторов в классе C++
+                                //clearData()
 
-                            parameterCalculation.fillingResistanceVectorPhaseZero()
+                                parameterCalculation.fillingResistanceVectorPhaseZero()
 
-                            if(checkBox3.checkState) {
-                                for(let a = 0; a < columnScroll_4.children.length; ++a) {
-                                    columnScroll_4.children[a].currentIndex = 0
+                                if(checkBox3.checkState) {
+                                    for(let a = 0; a < columnScroll_4.children.length; ++a) {
+                                        columnScroll_4.children[a].currentIndex = 0
+                                    }
                                 }
                             }
                             /*******************************************************************************************/
