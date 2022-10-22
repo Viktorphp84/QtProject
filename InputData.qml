@@ -7,11 +7,9 @@ import QtCharts
 
 Item {
     id: inputData
-    width: widthItem
-    height: heightItem
+    width: 677
+    height: 360
 
-    property int widthItem: 677
-    property int heightItem: 360
     property var component
 
     property int toFixed: 6 //указывает до скольки знаков будут округляться результаты расчетов при выводе в строки
@@ -45,6 +43,16 @@ Item {
     property double sensitivityConditionLength: 0 //расстояние до СП
     property int numberOfReclosers: 0 //количество СП
     property int siteNumber: 0 //номер участка
+
+    DropShadow {
+        anchors.fill: rectangleInputData
+        source: rectangleInputData
+        transparentBorder: true
+        horizontalOffset: 3
+        verticalOffset: 3
+        radius: 5
+        color: "#80000000"
+    }
 
     //Соединение с сигналов из класса C++ ParameterCalculation
     /*******************************************************************************************************/
@@ -683,14 +691,14 @@ Item {
             //parameterCalculation.getVecEconomicSection()
         }
     }*/
-    layer.enabled: true
-    layer.effect: DropShadow {
-        transparentBorder: true
-        horizontalOffset: 3
-        verticalOffset: 3
-        radius: 5
-        color: "#80000000"
-    }
+//    layer.enabled: true
+//    layer.effect: DropShadow {
+//        transparentBorder: true
+//        horizontalOffset: 3
+//        verticalOffset: 3
+//        radius: 5
+//        color: "#80000000"
+//    }
 
     Drag.active: dragMouseArea.drag.active
 
@@ -1223,53 +1231,24 @@ Item {
     /*******************************************************************************************************/
     Rectangle {
         id: rectangleInputData
-
-        property bool activeFocusOnWindow: {inpData.z > chartComp.z &&
-                                            inpData.z > outData.z &&
-                                            inpData.z > canvCard.z}
-
-        Rectangle {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.rightMargin: 7
-            anchors.leftMargin: 7
-            height: 5
-            color: "red"
-
-            MouseArea {
-                anchors.fill: parent
-                property double clickPosBottom
-
-                onPressed: {
-                    if(rectangleInputData.activeFocusOnWindow) {
-                        clickPosBottom = parent.mouseY
-                    }
-                }
-
-                onPositionChanged: {
-
-                }
-            }
-        }
-
-
-
         anchors.fill: parent
         color: "#ffffff"
         radius: 5
         border.color: "#d1d1d1"
 
+        property bool activeFocusOnWindow: {inpData.z > chartComp.z &&
+                                            inpData.z > outData.z &&
+                                            inpData.z > canvCard.z}
+
         ScrollView {
             id: scrollView
-            width: parent.width
-            height: parent.height - 10
+
             visible: true
             clip: true
             hoverEnabled: true
             enabled: true
-            contentHeight: 600
-            anchors.centerIn: parent
+            contentHeight: 640
+            anchors.fill: parent
 
             MouseArea {
                 id: dragMouseArea
@@ -1288,13 +1267,498 @@ Item {
 
             Label {
                 id: labelNameWindow
-                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 338.5 - labelNameWindow.width / 2
                 anchors.topMargin: 10
                 text: qsTr("Исходные данные")
                 font.family: "Arial"
                 font.bold: true
                 font.pointSize: 20
             }
+
+            //Блок "Линия"
+            /**********************************************************************************************************/
+            Item {
+                id: itemLine
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.verticalCenter
+                anchors.bottomMargin: 110
+                anchors.topMargin: 5
+                anchors.leftMargin: 170
+
+                Frame {
+                    id: frameLine
+                    width: 322
+                    height: 122
+                    anchors.centerIn: parent
+                }
+
+                Label {
+                    id: labelLine
+                    anchors.top: frameLine.top
+                    anchors.horizontalCenter: frameLine.horizontalCenter
+                    text: qsTr("Линия")
+                    font.pointSize: 14
+                    font.bold: true
+                }
+
+
+                Label {
+                    id: labelNumberConsumer
+                    anchors.left: frameLine.left
+                    anchors.top: labelLine.bottom
+                    anchors.topMargin: 5
+                    anchors.leftMargin: 5
+                    text: qsTr("Количество потребителей")
+                    font.family: "Arial"
+                    font.pointSize: 10
+                }
+
+                //Ось X для графика
+                Component {
+                    id: componentCategoryRange
+                    CategoryRange {
+
+                    }
+                }
+
+                TextField {
+                    id: textFieldNumberConsumer
+                    anchors.left: labelNumberConsumer.right
+                    anchors.verticalCenter: labelNumberConsumer.verticalCenter
+                    anchors.leftMargin: 20
+                    layer.enabled: false
+                    placeholderText: qsTr("0")
+                    validator: RegularExpressionValidator {
+                        regularExpression: /([1-9]{1,2})|([0]{1})/
+                    }
+
+                    onAccepted: {
+                        parameterCalculation.numberOfConsumers = displayText
+                        parameterCalculation.clearVectors()//обнуление векторов в классе C++
+                        clearData()
+                        loadLine(displayText)
+
+                        for(let i = 1; i <= 10; ++i) {
+                            chartComp.categoryAxis.remove(String(i))
+                        }
+
+                        chartComp.maxAxisX = numberOfConsumers
+
+                        for(let f = 1; f <= numberOfConsumers; ++f) {
+                            chartComp.categoryAxis.append(String(f), f)
+                        }
+
+                        parameterCalculation.fillingResistanceVectorPhaseZero()
+                    }
+                }
+
+                Label {
+                    id: labelLoadType
+                    anchors.top: labelNumberConsumer.bottom
+                    anchors.horizontalCenter: frameLine.horizontalCenter
+                    anchors.topMargin: 15
+                    text: qsTr("Выбор типа нагрузки")
+                    font.pointSize: 10
+                    font.family: "Arial"
+                }
+
+                /**************************************************************************************/
+                RegularExpressionValidator {
+                    id: validatorUpTo2kW
+                    regularExpression: /([1]{1}[.][0-9]{0,6})|([0-2]{1})|([0]{1}[.][0-9]{0,6})/
+                }
+
+                RegularExpressionValidator {
+                    id: validatorOver2kW
+                    regularExpression: /([1-9]{1,3}[0]{0,2}[.][0-9]{0,6})|([0]{0,1}[.][0-9]{0,6})/
+                }
+
+                RegularExpressionValidator {
+                    id: validatorLength
+                    regularExpression: /([1-9]{1,2}[0]{0,1}[.][0-9]{0,6})|([0]{0,1}[.][0-9]{0,6})/
+                }
+
+                RegularExpressionValidator {
+                    id: validatorCos
+                    regularExpression: /([0]{1}[.][0-9]{0,6})|([1]{1})/
+                }
+
+                /**************************************************************************************/
+
+                ComboBox {
+                    id: comboBoxConsum
+                    anchors.top: labelLoadType.bottom
+                    anchors.topMargin: 10
+                    anchors.horizontalCenter: frameLine.horizontalCenter
+                    width: 230
+                    objectName: "comboBoxConsum"
+                    textRole: ""
+                    Layout.leftMargin: -50
+
+                    model: ListModel {
+                        id: listModelComboConsum
+                        ListElement {
+                            name: "Жилые дома с нагрузкой до 2кВт"
+                        }
+                        ListElement {
+                            name: "Жилые дома с нагрузкой свыше 2кВт"
+                        }
+                        ListElement {
+                            name: "Жилые дома с электоплитами"
+                        }
+                        ListElement {
+                            name: "Производственные потребители"
+                        }
+                    }
+
+                    delegate: ItemDelegate {
+                        width: comboBoxConsum.width
+                        Text {
+                            text: modelData
+                        }
+                    }
+
+                    onActivated: {
+                        if(currentIndex == 0) {
+                            for(let i = 0; i < numberOfConsumers; ++i) {
+                                columnScroll_1.children[i].validator = validatorUpTo2kW
+                            }
+                        } else {
+                            for(let x = 0; x < numberOfConsumers; ++x) {
+                                columnScroll_1.children[x].validator = validatorOver2kW
+                            }
+                        }
+                    }
+                }
+            }
+            /**********************************************************************************************************/
+
+            //Блок "Питающий трансформатор"
+            /**********************************************************************************************************/
+            Item {
+                id: itemTransformer
+                anchors.top: parent.top
+                anchors.left: itemLine.right
+                anchors.bottom: parent.verticalCenter
+                anchors.leftMargin: 330
+                anchors.topMargin: 5
+                anchors.bottomMargin: 110
+
+                Frame {
+                    id: frame1
+                    width: 309
+                    height: 122
+                    anchors.centerIn: parent
+
+                    Label {
+                        id: labelPowerTransformer
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Питающий трансформатор")
+                        font.pointSize: 14
+                        font.bold: true
+                    }
+
+                    GridLayout {
+                        anchors.top: labelPowerTransformer.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.leftMargin: 5
+                        anchors.rightMargin: 5
+                        rows: 2
+                        columns: 2
+
+                        Label {
+                            id: labelConnectionDiagram
+                            text: qsTr("Схема соединения обмоток")
+                        }
+
+                        TextField {
+                            id: textFieldConnectionDiagram
+                            placeholderText: qsTr("Y/Y0")
+                            Layout.maximumWidth: 80
+                            readOnly: true
+                        }
+
+                        Label {
+                            id: labelTransformerResistance
+                            text: qsTr("Сопротивление трансформатора, Ом")
+                        }
+
+                        TextField {
+                            id: textFieldTransformerResistance
+                            placeholderText: qsTr("0")
+                            Layout.maximumWidth: 80
+                            readOnly: true
+                        }
+
+                        Label {
+                            id: labelTransformerPower
+                            text: qsTr("Мощность трансформатора, кВа")
+                        }
+
+                        TextField {
+                            id: textFieldTransformerPower
+                            placeholderText: qsTr("0")
+                            Layout.maximumWidth: 80
+                            readOnly: true
+                        }
+                    }
+                }               
+            }
+            /**********************************************************************************************************/
+
+            //Блок "Двигатель"
+            /**********************************************************************************************************/
+            Item {
+                id: itemEngine
+                anchors.top: itemLine.bottom
+                anchors.left: parent.left
+                anchors.leftMargin: 170
+                anchors.bottom: parent.verticalCenter
+
+                Frame {
+                    id: frameEngine
+                    width: 322
+                    height: 170
+                    anchors.centerIn: parent
+
+                    Label {
+                        id: labelEngine
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Двигатель")
+                        font.pointSize: 14
+                        font.bold: true
+                    }
+
+                    /*********************************************************/
+                    Label {
+                        id: labelEnginePower
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5
+                        anchors.top: labelEngine.bottom
+                        anchors.topMargin: 10
+                        text: qsTr("Мощность двигателя, кВт")
+                    }
+
+                    TextField {
+                        id: textFieldEnginePower
+                        anchors.right: parent.right
+                        anchors.verticalCenter:labelEnginePower.verticalCenter
+                        placeholderText: qsTr("0")
+                    }
+
+                    /*********************************************************/
+                    Label {
+                        id: labelEfficiencyFactor
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5
+                        anchors.top: labelEnginePower.bottom
+                        anchors.topMargin: 10
+                        text: qsTr("КПД двигателя в ед.")
+                    }
+
+                    TextField {
+                        id: textFieldEfficiencyFactor
+                        anchors.right: parent.right
+                        anchors.verticalCenter: labelEfficiencyFactor.verticalCenter
+                        placeholderText: qsTr("0")
+                    }
+
+                    /*********************************************************/
+                    Label {
+                        id: labelEngineCos
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5
+                        anchors.top: labelEfficiencyFactor.bottom
+                        anchors.topMargin: 10
+                        text: qsTr("Cos двигателя")
+                    }
+
+                    TextField {
+                        id: textFieldEngineCos
+                        anchors.right: parent.right
+                        anchors.verticalCenter: labelEngineCos.verticalCenter
+                        placeholderText: qsTr("0")
+                    }
+
+                    /*********************************************************/
+                    Label {
+                        id: labelStartingCurrentRatio
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5
+                        anchors.top: labelEngineCos.bottom
+                        anchors.topMargin: 10
+                        text: qsTr("Кратность пускового тока")
+                    }
+
+                    TextField {
+                        id: textFieldStartingCurrentRatio
+                        anchors.right: parent.right
+                        anchors.verticalCenter: labelStartingCurrentRatio.verticalCenter
+                        placeholderText: qsTr("0")
+                    }
+
+                    /*********************************************************/
+                    Label {
+                        id: labelEngineType
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5
+                        anchors.top: labelStartingCurrentRatio.bottom
+                        anchors.topMargin: 10
+                        text: qsTr("Тип двигателя")
+                    }
+
+                    ComboBox {
+                        id: comboBoxEngineType
+                        anchors.right: parent.right
+                        anchors.verticalCenter: labelEngineType.verticalCenter
+                        width: 220
+
+                        model: [
+                            qsTr("Короткозамкнутый ротор, до 5с"),
+                            qsTr("Короткозамкнутый ротор, более 10с"),
+                            qsTr("Фазный ротор")
+                        ]
+
+                        delegate: ItemDelegate {
+                            width: comboBoxEngineType.width
+                            Text {
+                                text: modelData
+                            }
+                        }
+                    }
+                }
+            }
+            /**********************************************************************************************************/
+
+            //Группа checkBox
+            /**********************************************************************************************************/
+            Item {
+                id: itemCheckBox
+                anchors.top: itemTransformer.bottom
+                anchors.left: itemEngine.right
+                anchors.bottom: parent.verticalCenter
+                anchors.leftMargin: 330
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 15
+
+                    /******************************************************************************************/
+                    RowLayout {
+                        spacing: 30
+                        Layout.bottomMargin: -5
+
+                        CheckBox {
+                            id: checkBox1
+                            text: qsTr("Расчет секционирующих пунктов")
+
+                            onCheckStateChanged: {
+                                if(checkBox1.checkState > 0) {
+                                    checkBox2.checkState = 0
+                                    checkBox3.checkState = 0
+                                    textFieldCheckBox2.enabled = false
+                                }
+                            }
+                        }
+
+                        ColumnLayout {
+
+                            Layout.topMargin: -13
+
+                            Text {
+                                text: "Перерасчет сечения"
+                                font.pointSize: 7
+                                Layout.leftMargin: -10
+                            }
+
+                            Switch {
+                                id: switchRecloser
+
+                            }
+                        }
+                    }
+
+                    /******************************************************************************************/
+
+                    RowLayout {
+                        spacing: 5
+
+                        CheckBox {
+                            id: checkBox2
+                            text: qsTr("Расчет по максимальному отклонению")
+
+                            onCheckStateChanged: {
+                                if(checkBox2.checkState > 0) {
+                                    checkBox1.checkState = 0
+                                    checkBox3.checkState = 0
+                                    textFieldCheckBox2.enabled = true
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "  "
+                        }
+
+                        TextField {
+                            id: textFieldCheckBox2
+                            Layout.maximumWidth: 30
+                            placeholderText: qsTr("0")
+                            enabled: false
+                        }
+
+                        Label {
+                            text: "%"
+                        }
+                    }
+
+                    /******************************************************************************************/
+
+                    CheckBox {
+                        id: checkBox3
+                        //checkState: Qt.Checked
+                        text: qsTr("Расчет по экономической плотности тока")
+                        onCheckStateChanged: {
+                            if(checkBox3.checkState > 0) {
+                                checkBox2.checkState = 0
+                                checkBox1.checkState = 0
+                                textFieldCheckBox2.enabled = false
+                            }
+
+                            //Сброс данных
+                            /*******************************************************************************************/
+                            if(checkState) {
+                                //parameterCalculation.clearVectors()//обнуление векторов в классе C++
+                                //clearData()
+
+                                parameterCalculation.fillingResistanceVectorPhaseZero()
+
+                                if(checkBox3.checkState) {
+                                    for(let a = 0; a < columnScroll_4.children.length; ++a) {
+                                        columnScroll_4.children[a].currentIndex = 0
+                                    }
+                                }
+                            }
+                            /*******************************************************************************************/
+                            if(checkState) {
+                                for(let j = 0; j < columnScroll_4.children.length; ++j) {
+                                    columnScroll_4.children[j].currentIndex = 0
+                                    checkBox3CheckState = true
+                                }
+                            } else {
+                                checkBox3CheckState = false
+                            }
+                        }
+                    }
+                }
+            }
+            /**********************************************************************************************************/
 
             //Блок ввода данных
             /**********************************************************************************************************/
@@ -1303,10 +1767,10 @@ Item {
                 spacing: 5
                 leftPadding: 10
                 rightPadding: 20
-                anchors.bottom: buttonEnter.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                bottomPadding: 10
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 50
 
                 //Активная нагрузка
                 /*************************************************************************************************/
@@ -1438,18 +1902,18 @@ Item {
                 /*************************************************************************************************/
             }
 
-            /**********************************************************************************************************/
-
-            //Кнопка "Ввод"
+            //Кнопка "Рассчитать"
             /**********************************************************************************************************/
             Button {
                 id: buttonEnter
 
-                anchors.left: parent.left
+                anchors.top: rowRect.bottom
                 anchors.bottom: parent.bottom
+                anchors.left: parent.left
                 anchors.leftMargin: 20
+                anchors.topMargin: 10
+                anchors.bottomMargin: 10
                 width: 90
-                height: 30
                 text: qsTr("Рассчитать")
                 font.bold: true
 
@@ -1469,497 +1933,59 @@ Item {
                     }
                 }
             }
-
-            //Блок "Линия"
-            /**********************************************************************************************************/
-            Item {
-                id: itemLine
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.right: parent.horizontalCenter
-                anchors.bottom: parent.verticalCenter
-                anchors.bottomMargin: 140
-                anchors.topMargin: 35
-                anchors.leftMargin: 15
-
-                Frame {
-                    id: frameLine
-                    width: 322
-                    height: 122
-                    anchors.centerIn: parent
-                }
-
-                Label {
-                    id: labelLine
-                    anchors.top: parent.top
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: qsTr("Линия")
-                    font.pointSize: 14
-                    font.bold: true
-                }
-
-
-                Label {
-                    id: labelNumberConsumer
-                    anchors.left: parent.left
-                    anchors.top: labelLine.bottom
-                    anchors.topMargin: 5
-                    anchors.leftMargin: 5
-                    text: qsTr("Количество потребителей")
-                    font.family: "Arial"
-                    font.pointSize: 10
-                }
-
-                //Ось X для графика
-                Component {
-                    id: componentCategoryRange
-                    CategoryRange {
-
-                    }
-                }
-
-                TextField {
-                    id: textFieldNumberConsumer
-                    anchors.left: labelNumberConsumer.right
-                    anchors.verticalCenter: labelNumberConsumer.verticalCenter
-                    anchors.leftMargin: 20
-                    layer.enabled: false
-                    placeholderText: qsTr("0")
-                    validator: RegularExpressionValidator {
-                        regularExpression: /([1-9]{1,2})|([0]{1})/
-                    }
-
-                    onAccepted: {
-                        parameterCalculation.numberOfConsumers = displayText
-                        parameterCalculation.clearVectors()//обнуление векторов в классе C++
-                        clearData()
-                        loadLine(displayText)
-
-                        for(let i = 1; i <= 10; ++i) {
-                            chartComp.categoryAxis.remove(String(i))
-                        }
-
-                        chartComp.maxAxisX = numberOfConsumers
-
-                        for(let f = 1; f <= numberOfConsumers; ++f) {
-                            chartComp.categoryAxis.append(String(f), f)
-                        }
-
-                        parameterCalculation.fillingResistanceVectorPhaseZero()
-                    }
-                }
-
-                Label {
-                    id: labelLoadType
-                    anchors.top: labelNumberConsumer.bottom
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: 15
-                    text: qsTr("Выбор типа нагрузки")
-                    font.pointSize: 10
-                    font.family: "Arial"
-                }
-
-                /**************************************************************************************/
-                RegularExpressionValidator {
-                    id: validatorUpTo2kW
-                    regularExpression: /([1]{1}[.][0-9]{0,6})|([0-2]{1})|([0]{1}[.][0-9]{0,6})/
-                }
-
-                RegularExpressionValidator {
-                    id: validatorOver2kW
-                    regularExpression: /([1-9]{1,3}[0]{0,2}[.][0-9]{0,6})|([0]{0,1}[.][0-9]{0,6})/
-                }
-
-                RegularExpressionValidator {
-                    id: validatorLength
-                    regularExpression: /([1-9]{1,2}[0]{0,1}[.][0-9]{0,6})|([0]{0,1}[.][0-9]{0,6})/
-                }
-
-                RegularExpressionValidator {
-                    id: validatorCos
-                    regularExpression: /([0]{1}[.][0-9]{0,6})|([1]{1})/
-                }
-
-                /**************************************************************************************/
-
-                ComboBox {
-                    id: comboBoxConsum
-                    anchors.top: labelLoadType.bottom
-                    anchors.topMargin: 10
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: 230
-                    objectName: "comboBoxConsum"
-                    textRole: ""
-                    Layout.leftMargin: -50
-
-                    model: ListModel {
-                        id: listModelComboConsum
-                        ListElement {
-                            name: "Жилые дома с нагрузкой до 2кВт"
-                        }
-                        ListElement {
-                            name: "Жилые дома с нагрузкой свыше 2кВт"
-                        }
-                        ListElement {
-                            name: "Жилые дома с электоплитами"
-                        }
-                        ListElement {
-                            name: "Производственные потребители"
-                        }
-                    }
-
-                    delegate: ItemDelegate {
-                        width: comboBoxConsum.width
-                        Text {
-                            text: modelData
-                        }
-                    }
-
-                    onActivated: {
-                        if(currentIndex == 0) {
-                            for(let i = 0; i < numberOfConsumers; ++i) {
-                                columnScroll_1.children[i].validator = validatorUpTo2kW
-                            }
-                        } else {
-                            for(let x = 0; x < numberOfConsumers; ++x) {
-                                columnScroll_1.children[x].validator = validatorOver2kW
-                            }
-                        }
-                    }
-                }
-            }
-            /**********************************************************************************************************/
-
-            //Блок "Питающий трансформатор"
-            /**********************************************************************************************************/
-            Item {
-                id: item2
-                anchors.top: parent.top
-                anchors.left: itemLine.right
-                anchors.right: parent.right
-                anchors.bottom: parent.verticalCenter
-                anchors.leftMargin: 15
-                anchors.topMargin: 35
-                anchors.bottomMargin: 140
-
-                Frame {
-                    id: frame1
-                    width: 309
-                    height: 122
-                    anchors.centerIn: parent
-
-                    Label {
-                        id: labelPowerTransformer
-                        anchors.top: parent.top
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Питающий трансформатор")
-                        font.pointSize: 14
-                        font.bold: true
-                    }
-
-                    GridLayout {
-                        anchors.top: labelPowerTransformer.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.leftMargin: 5
-                        anchors.rightMargin: 5
-                        rows: 2
-                        columns: 2
-
-                        Label {
-                            id: labelConnectionDiagram
-                            text: qsTr("Схема соединения обмоток")
-                        }
-
-                        TextField {
-                            id: textFieldConnectionDiagram
-                            placeholderText: qsTr("Y/Y0")
-                            Layout.maximumWidth: 80
-                            readOnly: true
-                        }
-
-                        Label {
-                            id: labelTransformerResistance
-                            text: qsTr("Сопротивление трансформатора, Ом")
-                        }
-
-                        TextField {
-                            id: textFieldTransformerResistance
-                            placeholderText: qsTr("0")
-                            Layout.maximumWidth: 80
-                            readOnly: true
-                        }
-
-                        Label {
-                            id: labelTransformerPower
-                            text: qsTr("Мощность трансформатора, кВа")
-                        }
-
-                        TextField {
-                            id: textFieldTransformerPower
-                            placeholderText: qsTr("0")
-                            Layout.maximumWidth: 80
-                            readOnly: true
-                        }
-                    }
-                }               
-            }
-            /**********************************************************************************************************/
-
-            //Блок "Двигатель"
-            /**********************************************************************************************************/
-            Item {
-                id: item3
-                anchors.top: itemLine.bottom
-                anchors.left: parent.left
-                anchors.right: parent.horizontalCenter
-                anchors.bottom: rowRect.top
-                anchors.leftMargin: 15
-                anchors.topMargin: 20
-                anchors.bottomMargin: 50
-
-                Frame {
-                    id: frame2
-                    width: 322
-                    height: 170
-                    anchors.centerIn: parent
-                }
-
-                Label {
-                    id: label17
-                    anchors.top: parent.top
-                    anchors.topMargin: -20
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: qsTr("Двигатель")
-                    font.pointSize: 14
-                    font.bold: true
-                }
-
-                /*********************************************************/
-                Label {
-                    id: labelEnginePower
-                    anchors.left: parent.left
-                    anchors.top: label17.bottom
-                    anchors.topMargin: 10
-                    text: qsTr("Мощность двигателя, кВт")
-                }
-
-                TextField {
-                    id: textFieldEnginePower
-                    anchors.right: parent.right
-                    anchors.verticalCenter:labelEnginePower.verticalCenter
-                    anchors.rightMargin: 5
-                    placeholderText: qsTr("0")
-                }
-
-                /*********************************************************/
-                Label {
-                    id: labelEfficiencyFactor
-                    anchors.left: parent.left
-                    anchors.top: labelEnginePower.bottom
-                    anchors.topMargin: 10
-                    text: qsTr("КПД двигателя в ед.")
-                }
-
-                TextField {
-                    id: textFieldEfficiencyFactor
-                    anchors.right: parent.right
-                    anchors.verticalCenter: labelEfficiencyFactor.verticalCenter
-                    anchors.rightMargin: 5
-                    placeholderText: qsTr("0")
-                }
-
-                /*********************************************************/
-                Label {
-                    id: labelEngineCos
-                    anchors.left: parent.left
-                    anchors.top: labelEfficiencyFactor.bottom
-                    anchors.topMargin: 10
-                    text: qsTr("Cos двигателя")
-                }
-
-                TextField {
-                    id: textFieldEngineCos
-                    anchors.right: parent.right
-                    anchors.verticalCenter: labelEngineCos.verticalCenter
-                    anchors.rightMargin: 5
-                    placeholderText: qsTr("0")
-                }
-
-                /*********************************************************/
-                Label {
-                    id: labelStartingCurrentRatio
-                    anchors.left: parent.left
-                    anchors.top: labelEngineCos.bottom
-                    anchors.topMargin: 10
-                    text: qsTr("Кратность пускового тока")
-                }
-
-                TextField {
-                    id: textFieldStartingCurrentRatio
-                    anchors.right: parent.right
-                    anchors.verticalCenter: labelStartingCurrentRatio.verticalCenter
-                    anchors.rightMargin: 5
-                    placeholderText: qsTr("0")
-                }
-
-                /*********************************************************/
-                Label {
-                    id: labelEngineType
-                    anchors.left: parent.left
-                    anchors.top: labelStartingCurrentRatio.bottom
-                    anchors.topMargin: 10
-                    text: qsTr("Тип двигателя")
-                }
-
-                ComboBox {
-                    id: comboBoxEngineType
-                    anchors.right: parent.right
-                    anchors.verticalCenter: labelEngineType.verticalCenter
-                    anchors.rightMargin: 5
-                    width: 220
-
-                    model: [
-                        qsTr("Короткозамкнутый ротор, до 5с"),
-                        qsTr("Короткозамкнутый ротор, более 10с"),
-                        qsTr("Фазный ротор")
-                    ]
-
-                    delegate: ItemDelegate {
-                        width: comboBoxEngineType.width
-                        Text {
-                            text: modelData
-                        }
-                    }
-                }
-            }
-            /**********************************************************************************************************/
-
-            //Группа checkBox
-            /**********************************************************************************************************/
-            Item {
-                id: item4
-                anchors.top: item2.bottom
-                anchors.left: item3.right
-                anchors.right: parent.right
-                anchors.bottom: rowRect.top
-                anchors.topMargin: -10
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 15
-
-                    /******************************************************************************************/
-                    RowLayout {
-                        spacing: 30
-                        Layout.bottomMargin: -5
-
-                        CheckBox {
-                            id: checkBox1
-                            text: qsTr("Расчет секционирующих пунктов")
-
-                            onCheckStateChanged: {
-                                if(checkBox1.checkState > 0) {
-                                    checkBox2.checkState = 0
-                                    checkBox3.checkState = 0
-                                    textFieldCheckBox2.enabled = false
-                                }
-                            }
-                        }
-
-                        ColumnLayout {
-
-                            Layout.topMargin: -13
-
-                            Text {
-                                text: "Перерасчет сечения"
-                                font.pointSize: 7
-                                Layout.leftMargin: -10
-                            }
-
-                            Switch {
-                                id: switchRecloser
-
-                            }
-                        }
-                    }
-
-                    /******************************************************************************************/
-
-                    RowLayout {
-                        spacing: 5
-
-                        CheckBox {
-                            id: checkBox2
-                            text: qsTr("Расчет по максимальному отклонению")
-
-                            onCheckStateChanged: {
-                                if(checkBox2.checkState > 0) {
-                                    checkBox1.checkState = 0
-                                    checkBox3.checkState = 0
-                                    textFieldCheckBox2.enabled = true
-                                }
-                            }
-                        }
-
-                        Label {
-                            text: "  "
-                        }
-
-                        TextField {
-                            id: textFieldCheckBox2
-                            Layout.maximumWidth: 30
-                            placeholderText: qsTr("0")
-                            enabled: false
-                        }
-
-                        Label {
-                            text: "%"
-                        }
-                    }
-
-                    /******************************************************************************************/
-
-                    CheckBox {
-                        id: checkBox3
-                        //checkState: Qt.Checked
-                        text: qsTr("Расчет по экономической плотности тока")
-                        onCheckStateChanged: {
-                            if(checkBox3.checkState > 0) {
-                                checkBox2.checkState = 0
-                                checkBox1.checkState = 0
-                                textFieldCheckBox2.enabled = false
-                            }
-
-                            //Сброс данных
-                            /*******************************************************************************************/
-                            if(checkState) {
-                                //parameterCalculation.clearVectors()//обнуление векторов в классе C++
-                                //clearData()
-
-                                parameterCalculation.fillingResistanceVectorPhaseZero()
-
-                                if(checkBox3.checkState) {
-                                    for(let a = 0; a < columnScroll_4.children.length; ++a) {
-                                        columnScroll_4.children[a].currentIndex = 0
-                                    }
-                                }
-                            }
-                            /*******************************************************************************************/
-                            if(checkState) {
-                                for(let j = 0; j < columnScroll_4.children.length; ++j) {
-                                    columnScroll_4.children[j].currentIndex = 0
-                                    checkBox3CheckState = true
-                                }
-                            } else {
-                                checkBox3CheckState = false
-                            }
-                        }
-                    }
-                }
-            }
             /**********************************************************************************************************/
         }
+
+        //Нижняя область для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 7
+            anchors.leftMargin: 7
+            height: 5
+
+            MouseArea {
+                id: bottomMouseScopeInp
+                anchors.fill: parent
+                cursorShape: rectangleInputData.activeFocusOnWindow ? Qt.SizeVerCursor : Qt.ArrowCursor
+                property double clickPosBottom
+
+                onPressed: {
+                    if(rectangleInputData.activeFocusOnWindow) {
+                        clickPosBottom = bottomMouseScopeInp.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+
+                    if(rectangleInputData.activeFocusOnWindow) {
+
+                        let delta = bottomMouseScopeInp.mouseY - clickPosBottom
+                        if(delta > 0) {
+
+                            if(delta < (backgroundRectangle.height - (inputData.height + inputData.y))) {
+                                inputData.height += delta
+
+                            } else {
+                                delta = (backgroundRectangle.height - inputData.y) - inputData.height
+                                inputData.height += delta
+                            }
+
+                        } else if(delta < 0) {
+
+                            if((inputData.height + delta) > 360) {
+                                inputData.height += delta
+                            } else {
+                                delta = 360 - inputData.height
+                                inputData.height += delta
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
     }
 }

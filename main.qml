@@ -105,19 +105,19 @@ ApplicationWindow {
             ChartCard {
                 id: chartComp
                 x: 0
-                y: inpData.height
+                y: 360
             }
 
             OutputData {
                 id: outData
-                x: backgroundRectangle.width - inpData.width
+                x: backgroundRectangle.width - 677
                 y: 0
             }
 
             CanvasCard {
                 id: canvCard
                 x: backgroundRectangle.width - inpData.width
-                y: inpData.height
+                y: 360
             }
 
             //Диалог с сообщениями пользователю

@@ -51,15 +51,6 @@ Item {
             locale: Qt.locale("en")
             antialiasing: true
 
-//            ValuesAxis {
-//                id: valueAxisX
-//                min: 0
-//                max: 10
-//                tickCount: 11
-//                titleText: "Участки"
-//                labelFormat: "%.0f"
-//            }
-
             ValuesAxis {
                 id: valueAxisY
                 min: 0
@@ -73,6 +64,7 @@ Item {
                 id: valueAxisX
                 min: 0
                 max: 10
+                titleText: "№ участка"
 
                 CategoryRange {
                     label: "1"
