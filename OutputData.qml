@@ -30,10 +30,25 @@ Item {
     property alias electromagneticRelease: textFieldElectromagneticRelease.text
     property alias resistancePhaseZeroSum: textFieldResistancePhaseZeroSum.text
 
+    property int outputDataX: 0
+    property int outputDataY: 0
+    property int outputDataWidth: 0
+    property int outputDataHeight: 0
+
     width: 677
     height: 360
-    layer.enabled: true
-    layer.effect: DropShadow {
+//    layer.enabled: true
+//    layer.effect: DropShadow {
+//        transparentBorder: true
+//        horizontalOffset: 3
+//        verticalOffset: 3
+//        radius: 5
+//        color: "#80000000"
+//    }
+
+    DropShadow {
+        anchors.fill: rectangleOutData
+        source: rectangleOutData
         transparentBorder: true
         horizontalOffset: 3
         verticalOffset: 3
@@ -44,14 +59,20 @@ Item {
     Drag.active: mousAreaOutput.drag.active
 
     Rectangle {
+        id: rectangleOutData
         color: "#ffffff"
         radius: 5
         border.color: "#d1d1d1"
+        border.width: 2
         anchors.fill: parent
 
+        property bool activeFocusOnWindow: {outData.z > chartComp.z &&
+                                            outData.z > inpData.z &&
+                                            outData.z > canvCard.z}
+
         ScrollView {
-            width: parent.width
-            height: parent.height - 10
+            width: parent.width - 14
+            height: parent.height - 14
             contentHeight: 600
             anchors.centerIn: parent
 
@@ -69,11 +90,32 @@ Item {
                 onContainsMouseChanged: {
                     outData.z = inpData.z + chartComp.z + canvCard.z + 1
                 }
+
+                onDoubleClicked: {
+                    if (outputData.width == backgroundRectangle.width
+                            && outputData.height == backgroundRectangle.height) {
+                        outputData.width = outputData.outputDataWidth
+                        outputData.height = outputData.outputDataHeight
+                        outputData.x = outputData.outputDataX
+                        outputData.y = outputData.outputDataY
+                    } else {
+                        outputData.outputDataX = outputData.x
+                        outputData.outputDataY = outputData.y
+                        outputData.outputDataWidth = outputData.width
+                        outputData.outputDataHeight = outputData.height
+                        outputData.width = backgroundRectangle.width
+                        outputData.height = backgroundRectangle.height
+                        outputData.x = 0
+                        outputData.y = 0
+                    }
+                }
             }
 
             Label {
                 id: labelOutputData
-                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 120
+                anchors.top: parent.top
                 anchors.topMargin: 10
                 height: 36
                 text: qsTr("Расчетные параметры на участках")
@@ -658,9 +700,10 @@ Item {
             /*******************************************************************/
             Label {
                 id: labelProtectionDevice
-                anchors.horizontalCenter: scrollViewOutput.horizontalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 120
                 anchors.top: scrollViewOutput.bottom
-                anchors.topMargin: 5
+                anchors.topMargin: 10
                 text: qsTr("Аппараты защиты и двигатель")
                 font.bold: true
                 font.pointSize: 20
@@ -795,5 +838,505 @@ Item {
                 readOnly: true
             }
         }
-    }
+
+        //Нижняя область для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 2
+            anchors.rightMargin: 7
+            anchors.leftMargin: 7
+            height: 5
+
+            MouseArea {
+                id: bottomMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeVerCursor : Qt.ArrowCursor
+                property double clickPosBottom
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosBottom = bottomMouseScopeOut.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+
+                    if(rectangleOutData.activeFocusOnWindow) {
+
+                        let delta = bottomMouseScopeOut.mouseY - clickPosBottom
+                        if(delta > 0) {
+
+                            if(delta < (backgroundRectangle.height - (outputData.height + outputData.y))) {
+                                outputData.height += delta
+
+                            } else {
+                                delta = (backgroundRectangle.height - outputData.y) - outputData.height
+                                outputData.height += delta
+                            }
+
+                        } else if(delta < 0) {
+
+                            if((outputData.height + delta) > 360) {
+                                outputData.height += delta
+                            } else {
+                                delta = 360 - outputData.height
+                                outputData.height += delta
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Верхняя область для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.topMargin: 2
+            anchors.rightMargin: 7
+            anchors.leftMargin: 7
+            height: 5
+
+            MouseArea {
+                id: topMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeVerCursor : Qt.ArrowCursor
+                property double clickPosTop
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosTop = topMouseScopeOut.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+
+                        let delta = topMouseScopeOut.mouseY - clickPosTop
+
+                        if(delta > 0) {
+                            if((outputData.height - delta) > 360) {
+                                outputData.height -= delta
+                                outputData.y += delta
+                            } else {
+                                delta = outputData.height - 360
+                                outputData.height -= delta
+                                outputData.y += delta
+                            }
+                        } else if(delta < 0) {
+                            if(-delta < outputData.y) {
+                                outputData.height -= delta
+                                outputData.y += delta
+                            } else {
+                                delta = outputData.y
+                                outputData.height += delta
+                                outputData.y -= delta
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Правая область для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.rightMargin: 2
+            anchors.topMargin: 7
+            anchors.bottomMargin: 7
+            width: 5
+
+            MouseArea {
+                id: rightMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeHorCursor : Qt.ArrowCursor
+                property double clickPosRight
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosRight = rightMouseScopeOut.mouseX
+                    }
+                }
+
+                onPositionChanged: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+
+                        let delta = rightMouseScopeOut.mouseX - clickPosRight
+
+                        if(delta > 0) {
+                            if(delta < (backgroundRectangle.width - outputData.x - outputData.width)) {
+                                outputData.width += delta
+                            } else {
+                                delta = backgroundRectangle.width - outputData.x - outputData.width
+                                outputData.width += delta
+                            }
+                        } else if (delta < 0) {
+                            if((outputData.width + delta) > 677) {
+                                outputData.width += delta
+                            } else {
+                                delta = 677 - outputData.width
+                                outputData.width += delta
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Левая область для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.leftMargin: 2
+            anchors.topMargin: 7
+            anchors.bottomMargin: 7
+            width: 5
+
+            MouseArea {
+                id: leftMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeHorCursor : Qt.ArrowCursor
+                property double clickPosLeft
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosLeft = leftMouseScopeOut.mouseX
+                    }
+                }
+
+                onPositionChanged: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+
+                        let delta = leftMouseScopeOut.mouseX - clickPosLeft
+
+                        if(delta > 0) {
+                            if((outputData.width - delta) > 677) {
+                                outputData.width -= delta
+                                outputData.x += delta
+                            } else {
+                                delta = outputData.width - 677
+                                outputData.width -= delta
+                                outputData.x += delta
+                            }
+                        } else if(delta < 0) {
+                            if(-delta < outputData.x) {
+                                outputData.width -= delta
+                                outputData.x += delta
+                            } else {
+                                delta = outputData.x
+                                outputData.width += delta
+                                outputData.x -= delta
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Верхний левый угол для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.leftMargin: 2
+            anchors.topMargin: 2
+            radius: 2
+            width: 7
+            height: 7
+
+            MouseArea {
+                id: topLeftMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeFDiagCursor : Qt.ArrowCursor
+                property double clickPosTop
+                property double clickPosLeft
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosLeft = topLeftMouseScopeOut.mouseX
+                        clickPosTop = topLeftMouseScopeOut.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        let deltaY = topLeftMouseScopeOut.mouseY - clickPosTop
+
+                        if(deltaY > 0) {
+                            if((outputData.height - deltaY) > 360) {
+                                outputData.height -= deltaY
+                                outputData.y += deltaY
+                            } else {
+                                deltaY = outputData.height - 360
+                                outputData.height -= deltaY
+                                outputData.y += deltaY
+                            }
+                        } else if(deltaY < 0) {
+                            if(-deltaY < outputData.y) {
+                                outputData.height -= deltaY
+                                outputData.y += deltaY
+                            } else {
+                                deltaY = outputData.y
+                                outputData.height += deltaY
+                                outputData.y -= deltaY
+                            }
+                        }
+
+                        let deltaX = topLeftMouseScopeOut.mouseX - clickPosLeft
+
+                        if(deltaX > 0) {
+                            if((outputData.width - deltaX) > 677) {
+                                outputData.width -= deltaX
+                                outputData.x += deltaX
+                            } else {
+                                deltaX = outputData.width - 677
+                                outputData.width -= deltaX
+                                outputData.x += deltaX
+                            }
+                        } else if(deltaX < 0) {
+                            if(-deltaX < outputData.x) {
+                                outputData.width -= deltaX
+                                outputData.x += deltaX
+                            } else {
+                                deltaX = outputData.x
+                                outputData.width += deltaX
+                                outputData.x -= deltaX
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Верхний правый угол для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.rightMargin: 2
+            anchors.topMargin: 2
+            radius: 2
+            width: 7
+            height: 7
+
+            MouseArea {
+                id: topRightMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeBDiagCursor : Qt.ArrowCursor
+                property double clickPosTop
+                property double clickPosRight
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosRight = topLeftMouseScopeOut.mouseX
+                        clickPosTop = topLeftMouseScopeOut.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        let deltaY = topRightMouseScopeOut.mouseY - clickPosTop
+
+                        if(deltaY > 0) {
+                            if((outputData.height - deltaY) > 360) {
+                                outputData.height -= deltaY
+                                outputData.y += deltaY
+                            } else {
+                                deltaY = outputData.height - 360
+                                outputData.height -= deltaY
+                                outputData.y += deltaY
+                            }
+                        } else if(deltaY < 0) {
+                            if(-deltaY < outputData.y) {
+                                outputData.height -= deltaY
+                                outputData.y += deltaY
+                            } else {
+                                deltaY = outputData.y
+                                outputData.height += deltaY
+                                outputData.y -= deltaY
+                            }
+                        }
+
+                        let deltaX = topRightMouseScopeOut.mouseX - clickPosRight
+
+                        if(deltaX > 0) {
+                            if(deltaX < (backgroundRectangle.width - outputData.x - outputData.width)) {
+                                outputData.width += deltaX
+                            } else {
+                                deltaX = backgroundRectangle.width - outputData.x - outputData.width
+                                outputData.width += deltaX
+                            }
+                        } else if (deltaX < 0) {
+                            if((outputData.width + deltaX) > 677) {
+                                outputData.width += deltaX
+                            } else {
+                                deltaX = 677 - outputData.width
+                                outputData.width += deltaX
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Нижний левый угол для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.leftMargin: 2
+            anchors.bottomMargin: 2
+            radius: 2
+            width: 7
+            height: 7
+
+            MouseArea {
+                id: bottomLeftMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeBDiagCursor : Qt.ArrowCursor
+                property double clickPosBottom
+                property double clickPosLeft
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosLeft = topLeftMouseScopeOut.mouseX
+                        clickPosBottom = topLeftMouseScopeOut.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        let deltaX = bottomLeftMouseScopeOut.mouseX - clickPosLeft
+
+                        if(deltaX > 0) {
+                            if((outputData.width - deltaX) > 677) {
+                                outputData.width -= deltaX
+                                outputData.x += deltaX
+                            } else {
+                                deltaX = outputData.width - 677
+                                outputData.width -= deltaX
+                                outputData.x += deltaX
+                            }
+                        } else if(deltaX < 0) {
+                            if(-deltaX < outputData.x) {
+                                outputData.width -= deltaX
+                                outputData.x += deltaX
+                            } else {
+                                deltaX = outputData.x
+                                outputData.width += deltaX
+                                outputData.x -= deltaX
+                            }
+                        }
+
+                        let deltaY = bottomLeftMouseScopeOut.mouseY - clickPosBottom
+                        if(deltaY > 0) {
+
+                            if(deltaY < (backgroundRectangle.height - (outputData.height + outputData.y))) {
+                                outputData.height += deltaY
+
+                            } else {
+                                deltaY = (backgroundRectangle.height - outputData.y) - outputData.height
+                                outputData.height += deltaY
+                            }
+
+                        } else if(deltaY < 0) {
+
+                            if((outputData.height + deltaY) > 360) {
+                                outputData.height += deltaY
+                            } else {
+                                deltaY = 360 - outputData.height
+                                outputData.height += deltaY
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Нижний правый угол для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 2
+            anchors.bottomMargin: 2
+            radius: 2
+            width: 7
+            height: 7
+
+            MouseArea {
+                id: bottomRightMouseScopeOut
+                anchors.fill: parent
+                cursorShape: rectangleOutData.activeFocusOnWindow ? Qt.SizeFDiagCursor : Qt.ArrowCursor
+                property double clickPosBottom
+                property double clickPosRight
+
+                onPressed: {
+                    if(rectangleOutData.activeFocusOnWindow) {
+                        clickPosRight = topLeftMouseScopeOut.mouseX
+                        clickPosBottom = topLeftMouseScopeOut.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+                    let deltaX = bottomRightMouseScopeOut.mouseX - clickPosRight
+
+                    if(deltaX > 0) {
+                        if(deltaX < (backgroundRectangle.width - outputData.x - outputData.width)) {
+                            outputData.width += deltaX
+                        } else {
+                            deltaX = backgroundRectangle.width - outputData.x - outputData.width
+                            outputData.width += deltaX
+                        }
+                    } else if (deltaX < 0) {
+                        if((outputData.width + deltaX) > 677) {
+                            outputData.width += deltaX
+                        } else {
+                            deltaX = 677 - outputData.width
+                            outputData.width += deltaX
+                        }
+                    }
+
+                    let deltaY = bottomRightMouseScopeOut.mouseY - clickPosBottom
+                    if(deltaY > 0) {
+
+                        if(deltaY < (backgroundRectangle.height - (outputData.height + outputData.y))) {
+                            outputData.height += deltaY
+
+                        } else {
+                            deltaY = (backgroundRectangle.height - outputData.y) - outputData.height
+                            outputData.height += deltaY
+                        }
+
+                    } else if(deltaY < 0) {
+
+                        if((outputData.height + deltaY) > 360) {
+                            outputData.height += deltaY
+                        } else {
+                            deltaY = 360 - outputData.height
+                            outputData.height += deltaY
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+    }  
 }

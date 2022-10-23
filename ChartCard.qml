@@ -43,6 +43,7 @@ Item {
         height: 300
         radius: 5
         border.color: "#d1d1d1"
+        border.width: 2
 
         ChartView {
             id: chartCard
@@ -122,6 +123,44 @@ Item {
 
         Drag.active: mouseRectChart.drag.active
 
+        MouseArea {
+            id: mouseRectChart
+            width: rectChart.width - 7
+            height: rectChart.height - 7
+            anchors.centerIn: rectChart
+            drag {
+                target: rectChart
+                minimumX: 0
+                minimumY: -inpData.height
+                maximumX: backgroundRectangle.width - rectChart.width
+                maximumY: backgroundRectangle.height - rectChart.height - inpData.height
+            }
+
+            onDoubleClicked: {
+
+                if (rectChart.width == backgroundRectangle.width
+                        && rectChart.height == backgroundRectangle.height) {
+                    rectChart.width = chartWidth
+                    rectChart.height = chartHeight
+                    rectChart.x = chartX
+                    rectChart.y = chartY
+                } else {
+                    chartX = rectChart.x
+                    chartY = rectChart.y
+                    chartWidth = rectChart.width
+                    chartHeight = rectChart.height
+                    rectChart.width = backgroundRectangle.width
+                    rectChart.height = backgroundRectangle.height
+                    rectChart.x = 0
+                    rectChart.y = -inpData.height
+                }
+            }
+
+            onContainsMouseChanged: {
+                chartComp.z = outData.z + inpData.z + canvCard.z + 1
+            }
+        }
+
         //Нижняя область для изменения размера
         /*****************************************************************/
         Rectangle {
@@ -130,6 +169,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.leftMargin: 7
             anchors.rightMargin: 7
+            anchors.bottomMargin: 2
             height: 5
 
             MouseArea {
@@ -177,6 +217,7 @@ Item {
             anchors.top: parent.top
             anchors.leftMargin: 7
             anchors.rightMargin: 7
+            anchors.topMargin: 2
             height: 5
 
             MouseArea {
@@ -228,6 +269,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.topMargin: 7
             anchors.bottomMargin: 7
+            anchors.leftMargin: 2
             width: 5
 
             MouseArea {
@@ -281,6 +323,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.topMargin: 7
             anchors.bottomMargin: 7
+            anchors.rightMargin: 2
             width: 5
 
             MouseArea {
@@ -327,6 +370,7 @@ Item {
             anchors.top: parent.top
             anchors.leftMargin: 2
             anchors.topMargin: 2
+            radius: 2
             width: 7
             height: 7
 
@@ -404,6 +448,7 @@ Item {
             anchors.top: parent.top
             anchors.rightMargin: 2
             anchors.topMargin: 2
+            radius: 2
             width: 7
             height: 7
 
@@ -477,6 +522,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.rightMargin: 2
             anchors.bottomMargin: 2
+            radius: 2
             width: 7
             height: 7
 
@@ -546,6 +592,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.leftMargin: 2
             anchors.bottomMargin: 2
+            radius: 2
             width: 7
             height: 7
 
@@ -611,43 +658,5 @@ Item {
             }
         }
         /*****************************************************************/
-    }
-
-    MouseArea {
-        id: mouseRectChart
-        width: rectChart.width - 7
-        height: rectChart.height - 7
-        anchors.centerIn: rectChart
-        drag {
-            target: rectChart
-            minimumX: 0
-            minimumY: -inpData.height
-            maximumX: backgroundRectangle.width - rectChart.width
-            maximumY: backgroundRectangle.height - rectChart.height - inpData.height
-        }
-
-        onDoubleClicked: {
-
-            if (rectChart.width == backgroundRectangle.width
-                    && rectChart.height == backgroundRectangle.height) {
-                rectChart.width = chartWidth
-                rectChart.height = chartHeight
-                rectChart.x = chartX
-                rectChart.y = chartY
-            } else {
-                chartX = rectChart.x
-                chartY = rectChart.y
-                chartWidth = rectChart.width
-                chartHeight = rectChart.height
-                rectChart.width = backgroundRectangle.width
-                rectChart.height = backgroundRectangle.height
-                rectChart.x = 0
-                rectChart.y = -inpData.height
-            }
-        }
-
-        onContainsMouseChanged: {
-            chartComp.z = outData.z + inpData.z + canvCard.z + 1
-        }
     }
 }

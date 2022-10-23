@@ -44,6 +44,11 @@ Item {
     property int numberOfReclosers: 0 //количество СП
     property int siteNumber: 0 //номер участка
 
+    //Переменные для сохранения позиции и размера окна при развертываниии на весь экран
+    property int inputDataX: 0
+    property int inputDataY: 0
+    property int inputDataHeigth: 0
+
     DropShadow {
         anchors.fill: rectangleInputData
         source: rectangleInputData
@@ -1235,6 +1240,7 @@ Item {
         color: "#ffffff"
         radius: 5
         border.color: "#d1d1d1"
+        border.width: 2
 
         property bool activeFocusOnWindow: {inpData.z > chartComp.z &&
                                             inpData.z > outData.z &&
@@ -1248,7 +1254,11 @@ Item {
             hoverEnabled: true
             enabled: true
             contentHeight: 640
-            anchors.fill: parent
+            anchors.centerIn: parent
+            width: parent.width - 14
+            height: parent.height - 14
+            anchors.topMargin: 7
+            anchors.bottomMargin: 7
 
             MouseArea {
                 id: dragMouseArea
@@ -1262,6 +1272,19 @@ Item {
                 }
                 onContainsMouseChanged: {
                     inpData.z = outData.z + chartComp.z + canvCard.z + 1
+                }
+
+                onDoubleClicked: {
+                    if(rectangleInputData.height == backgroundRectangle.height) {
+                        inputData.height = inputData.inputDataHeigth
+                        inputData.y = inputData.inputDataY
+                    } else {
+                        inputData.inputDataX = inputData.x
+                        inputData.inputDataY = inputData.y
+                        inputData.inputDataHeigth = inputData.height
+                        inputData.height = backgroundRectangle.height
+                        inputData.y = 0
+                    }
                 }
             }
 
@@ -1945,6 +1968,7 @@ Item {
             anchors.rightMargin: 7
             anchors.leftMargin: 7
             height: 5
+            anchors.bottomMargin: 2
 
             MouseArea {
                 id: bottomMouseScopeInp
@@ -1980,6 +2004,59 @@ Item {
                             } else {
                                 delta = 360 - inputData.height
                                 inputData.height += delta
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**********************************************************************************************************/
+
+        //Верхняя область для изменения размера
+        /**********************************************************************************************************/
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.rightMargin: 7
+            anchors.leftMargin: 7
+            height: 5
+            anchors.topMargin: 2
+
+            MouseArea {
+                id: topMouseScopeInp
+                anchors.fill: parent
+                cursorShape: rectangleInputData.activeFocusOnWindow ? Qt.SizeVerCursor : Qt.ArrowCursor
+                property double clickPosTop
+
+                onPressed: {
+                    if(rectangleInputData.activeFocusOnWindow) {
+                        clickPosTop = topMouseScopeInp.mouseY
+                    }
+                }
+
+                onPositionChanged: {
+                    if(rectangleInputData.activeFocusOnWindow) {
+
+                        let delta = topMouseScopeInp.mouseY - clickPosTop
+
+                        if(delta > 0) {
+                            if((inputData.height - delta) > 360) {
+                                inputData.height -= delta
+                                inputData.y += delta
+                            } else {
+                                delta = inputData.height - 360
+                                inputData.height -= delta
+                                inputData.y += delta
+                            }
+                        } else if(delta < 0) {
+                            if(-delta < inputData.y) {
+                                inputData.height -= delta
+                                inputData.y += delta
+                            } else {
+                                delta = inputData.y
+                                inputData.height += delta
+                                inputData.y -= delta
                             }
                         }
                     }
