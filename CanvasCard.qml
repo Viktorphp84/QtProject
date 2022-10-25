@@ -2,18 +2,11 @@ import QtQuick
 import Qt5Compat.GraphicalEffects
 import QtQuick.Shapes
 
+
 Rectangle {
     id: rootRect
     width: 677
     height: 300
-    layer.enabled: true
-    layer.effect: DropShadow {
-        transparentBorder: true
-        horizontalOffset: 3
-        verticalOffset: 3
-        radius: 5
-        color: "#80000000"
-    }
     border.color: "#d1d1d1"
     border.width: 2
     radius: 5
@@ -23,10 +16,15 @@ Rectangle {
                                         canvCard.z > inpData.z &&
                                         canvCard.z > outData.z}
 
+    //Переменные для изменения размеров окна по двойному щелчку
     property int canvasX: 0
     property int canvasY: 0
     property int canvasWidth: 0
     property int canvasHeight: 0
+
+    property alias canvas: canv
+
+    property double transformerPower: 0
 
     MouseArea {
         id: mouseRectCanvas
@@ -63,12 +61,22 @@ Rectangle {
         }
     }
 
+    DropShadow {
+        anchors.fill: rootRect
+        source: rootRect
+        transparentBorder: true
+        horizontalOffset: 3
+        verticalOffset: 3
+        radius: 5
+        color: "#80000000"
+    }
+
     Rectangle {
         id: rectTopBorder
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 25
+        height: 35
         color: "#d1d1d1"
         radius: 5
     }
@@ -79,7 +87,7 @@ Rectangle {
         anchors.top: rectTopBorder.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: -2
+        anchors.topMargin: -10
         border.color: "#d1d1d1"
         border.width: 2
         clip: true
@@ -87,7 +95,14 @@ Rectangle {
 
         Canvas {
             id: canv
-            anchors.fill: parent
+            anchors.top: parent.top
+            anchors.topMargin: 4
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 4
+            anchors.right: parent.right
+            anchors.rightMargin: 4
+            anchors.left: parent.left
+            anchors.leftMargin: 4
             //contextType: "2d"
             /*DragHandler {
                 target: canv
@@ -129,38 +144,91 @@ Rectangle {
 
                 lastX = area.mouseX - deltaX
                 lastY = area.mouseY - deltaY
-                var startX = lastX + canv.width / 10
-                var startY = lastY + canv.height / 2
+                var startX = lastX + 70
+                var startY = lastY + 100
                 var radius = 24
-                var lineX = canv.width / 4
+                var lineX = 170
                 var lengthRect = 30
 
                 if(count > 0) myContext.scale(scale, scale)
 
-                myContext.clearRect(0, 0, canv.width * 5, canv.height * 5)
-                myContext.beginPath()
-                myContext.arc(startX, startY, radius, 0, Math.PI * 2, false)
-                myContext.stroke()
-                myContext.beginPath()
-                myContext.arc(startX + radius, startY, radius, 0, Math.PI * 2, false)
-                myContext.lineTo(startX + radius + lineX, startY)
-                myContext.strokeRect(startX + radius + lineX, startY - lengthRect / 2, lengthRect, lengthRect)
-                myContext.moveTo(startX + radius + lineX + lengthRect, startY)
-                myContext.lineTo(startX + 310, startY)
-                //myContext.closePath()
-                //myContext.stroke()
-                myContext.moveTo(startX + 110, startY)
-                myContext.lineTo(startX + 110, startY + 100)
-                myContext.lineTo(startX + 110 - 10, startY + 100 - 10)
-                myContext.moveTo(startX + 110, startY + 100)
-                myContext.lineTo(startX + 110 + 10, startY + 100 - 10)
+                if(inpData.numberOfConsumers) {
+                    myContext.clearRect(0, 0, canv.width * 5, canv.height * 5) //очистка холста
 
-                myContext.moveTo(startX + 310, startY)
-                myContext.lineTo(startX + 310, startY + 100)
-                myContext.lineTo(startX + 310 - 10, startY + 100 - 10)
-                myContext.moveTo(startX + 310, startY + 100)
-                myContext.lineTo(startX + 310 + 10, startY + 100 - 10)
+                    myContext.beginPath() //начало отрисовки
 
+                    //Трансформатор
+                    /*******************************************************************************************/
+                    myContext.moveTo(startX + 2 * radius, startY)
+                    myContext.arc(startX + radius, startY, radius, 0, Math.PI * 2, false)
+                    myContext.moveTo(startX + radius, startY)
+                    myContext.arc(startX, startY, radius, 0, Math.PI * 2, false)
+                    myContext.stroke() //отрисовка
+                    /*******************************************************************************************/
+
+                    //Надпись мощность трансформатора
+                    /*******************************************************************************************/
+                    myContext.beginPath()
+                    myContext.strokeStyle = "black"
+                    myContext.font = "15px sans-serif"
+                    myContext.moveTo(startX + radius / 4, startY - 2 * radius)
+                    let transPowerLength = ((String(rootRect.transformerPower + " кВа")).length * 6) / 2
+                    myContext.text(String(rootRect.transformerPower) + " кВа",
+                                   startX + radius / 4 - transPowerLength,
+                                   startY - 1.5 * radius)
+                    myContext.stroke()
+                    /*******************************************************************************************/
+
+                    //Отрисовка линии
+                    /*******************************************************************************************/
+                    myContext.beginPath()
+                    myContext.lineWidth = 1.5
+                    myContext.strokeStyle = "steelblue"
+                    myContext.moveTo(startX + 2 * radius, startY)
+
+                    let savePoint = startX + 2 * radius
+
+                    for(let i = 0; i < inpData.numberOfConsumers; ++i) {
+                        savePoint = savePoint + inpData.arrayLengthSite[i] * 300
+                        myContext.lineTo(savePoint, startY)
+                        myContext.lineTo(savePoint, startY + 100)
+                        myContext.moveTo(savePoint, startY + 100 + 1)
+                        myContext.lineTo(savePoint - 5, startY + 100 - 10)
+                        myContext.moveTo(savePoint + 5, startY + 100 - 10)
+                        myContext.lineTo(savePoint, startY + 100 + 1)
+                        myContext.stroke()
+
+                        //Отображение мощности
+                        myContext.beginPath()
+                        myContext.strokeStyle = "black"
+                        myContext.font = "15px sans-serif"
+                        let activePowerLength = (String(inpData.arrayActivePower[i] + " кВт")).length * 6 / 2
+                        myContext.text(String(inpData.arrayActivePower[i] + " кВт"), savePoint - activePowerLength, startY + 100 + 1 + 15)
+                        myContext.stroke()
+
+                        myContext.beginPath()
+                        myContext.lineWidth = 1.5
+                        myContext.strokeStyle = "steelblue"
+                        myContext.moveTo(savePoint, startY)
+                    }
+                    /*******************************************************************************************/
+                }
+
+
+//                myContext.lineTo(startX + radius + lineX, startY)
+//                myContext.strokeRect(startX + radius + lineX, startY - lengthRect / 2, lengthRect, lengthRect)
+//                myContext.moveTo(startX + radius + lineX + lengthRect, startY)
+//                myContext.lineTo(startX + 310, startY)
+//                myContext.moveTo(startX + 110, startY)
+//                myContext.lineTo(startX + 110, startY + 100)
+//                myContext.lineTo(startX + 110 - 10, startY + 100 - 10)
+//                myContext.moveTo(startX + 110, startY + 100)
+//                myContext.lineTo(startX + 110 + 10, startY + 100 - 10)
+//                myContext.moveTo(startX + 310, startY)
+//                myContext.lineTo(startX + 310, startY + 100)
+//                myContext.lineTo(startX + 310 - 10, startY + 100 - 10)
+//                myContext.moveTo(startX + 310, startY + 100)
+//                myContext.lineTo(startX + 310 + 10, startY + 100 - 10)
 
                 myContext.stroke()
                 canv.scale = 1
@@ -169,15 +237,21 @@ Rectangle {
             MouseArea {
                 id: area
                 anchors.fill: parent
+
+                onContainsMouseChanged: {
+                    canvCard.z = chartComp.z + outData.z + inpData.z + 1
+                }
+
                 onPressed: {
                     canv.deltaX = mouseX - canv.lastX
                     canv.deltaY = mouseY - canv.lastY
                 }
+
                 onPositionChanged: {
                     canv.requestPaint()
                 }
 
-                onWheel: (wheel)=> {
+                onWheel: (wheel) => {
                              canv.scale = 1 + wheel.angleDelta.y / 1200
                              canv.requestPaint()
                              if(wheel.angleDelta.y / 120 > 0) {
@@ -332,7 +406,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.rightMargin: 2
-        anchors.topMargin: 7
+        anchors.topMargin: -8
         anchors.bottomMargin: 7
         width: 5
 
@@ -381,7 +455,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.leftMargin: 2
-        anchors.topMargin: 7
+        anchors.topMargin: -8
         anchors.bottomMargin: 7
         width: 5
 
@@ -434,7 +508,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.leftMargin: 2
         anchors.topMargin: 2
-        radius: 2
+        radius: 7
         width: 7
         height: 7
         color: "#d1d1d1"
@@ -511,7 +585,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.rightMargin: 2
         anchors.topMargin: 2
-        radius: 2
+        radius: 7
         width: 7
         height: 7
         color: "#d1d1d1"
@@ -584,7 +658,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.leftMargin: 2
         anchors.bottomMargin: 2
-        radius: 2
+        radius: 7
         width: 7
         height: 7
 
@@ -659,7 +733,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.rightMargin: 2
         anchors.bottomMargin: 2
-        radius: 2
+        radius: 7
         width: 7
         height: 7
 

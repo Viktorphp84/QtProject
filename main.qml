@@ -92,7 +92,7 @@ ApplicationWindow {
             property var componentInput: inpData
             property var componentOutput: outData
             property var componentChart: chartComp
-
+            property var componentCanv: canvCard
 
             InputData {
                 property var dialogWarning: dialogWarning

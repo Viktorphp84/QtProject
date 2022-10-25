@@ -223,8 +223,7 @@ Item {
                         textEdited.forceActiveFocus()
                         tableView.columnTable = index
                         if (index % 4) {
-                            transCard.transformerResistance = parseFloat(
-                                        display)
+                            transCard.transformerResistance = parseFloat(display)
 
                             for (var i = 0; i < root.componentCardsApp.length; ++i) {
 
@@ -237,6 +236,8 @@ Item {
                                     root.componentCardsApp[i].componentInput.connectionDiagram = "\u0394/Y0"
                                 }
                                 root.componentCardsApp[i].componentInput.transformerPower = String(c_model.getTransformerPower(index))
+                                root.componentCardsApp[i].componentCanv.transformerPower = c_model.getTransformerPower(index) //передача номинала мощности
+                                                                                               //для отображения на графике
                             }
 
                             calcSinglePhaseShortCircuit()

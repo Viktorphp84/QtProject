@@ -21,6 +21,9 @@ Item {
     property alias transformerPower: textFieldTransformerPower.text
     property double sumDesignCurrentConsumer: 0 //суммарный расчетный ток потребителей
 
+    property var arrayLengthSite: [] //массив длин участков
+    property var arrayActivePower: [] //масив активных мощностей
+
     //Двигатель
     property double startingCurrentRatio: 0 //кратность пускового тока
     property double engineType: 0           //тип двигателя
@@ -102,10 +105,14 @@ Item {
             } else {
                 //Заполнение данных
                 parameterCalculation.setVecActivLoad(parseFloat(strActivLoad))
+                inputData.arrayActivePower.push(strActivLoad) //массив мощностей для отображения на схеме
                 parameterCalculation.setVecLengthSite(parseFloat(strLengthSite))
                 parameterCalculation.setActivPowerCoefficient(parseFloat(strActivPowerCoef))
-            }
+            } 
         }
+
+        inputData.arrayLengthSite = parameterCalculation.getVecLengthSite()//сохранение вектора длин участков в массив
+                                                                           //для отображения на схеме
 
         //Расчет параметров
         /*******************************************************************************************/
@@ -1354,7 +1361,7 @@ Item {
                     layer.enabled: false
                     placeholderText: qsTr("0")
                     validator: RegularExpressionValidator {
-                        regularExpression: /([1-9]{1,2})|([0]{1})/
+                        regularExpression: /([1-9]{1,2})|([0]{1})|([1-9]{1}[0]{0,1})/
                     }
 
                     onAccepted: {
@@ -1953,6 +1960,8 @@ Item {
                         if(checkBox1.checkState) {
                             calculateRecloser()
                         }
+
+                        canvCard.canvas.requestPaint()
                     }
                 }
             }
