@@ -260,12 +260,12 @@ Item {
 
     //Расчет теплового расцепителя
     /*******************************************************************************************************/
-    function calculateThermalRelease(siteNumber) {
-        let arrThermalRelease = [1, 2, 4, 5, 6, 8, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160
+    function calculateThermalRelease(siteNumberRelease) {
+        let arrThermalRelease = [0, 1, 2, 4, 5, 6, 8, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160
                                  , 180, 200, 225, 250, 320, 400, 500, 630, 800, 1000, 1600, 2500, 4000, 6300]
 
         let arrDesignCurrent = parameterCalculation.getVecDesignCurrent()
-        let designSiteCurrent = arrDesignCurrent[siteNumber]
+        let designSiteCurrent = arrDesignCurrent[siteNumberRelease]
         let designCurrentRatingTemp =
             1.1 * (designSiteCurrent - inputData.ratedEngineCurrent + 0.4 * inputData.startingCurrent)
         let designCurrentRating = 0
@@ -291,11 +291,11 @@ Item {
 
     //Расчет электромагнитного расцепителя
     /*******************************************************************************************************/
-    function calculateElectromagneticRelease(siteNumber) {
+    function calculateElectromagneticRelease(siteNumberRelease) {
         let arrThermalRelease = [1, 2, 4, 5, 6, 8, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160
                                  , 180, 200, 225, 250, 320, 400, 500, 630, 800, 1000, 1600, 2500, 4000, 6300]
         let arrDesignCurrent = parameterCalculation.getVecDesignCurrent()
-        let designSiteCurrent = arrDesignCurrent[siteNumber]
+        let designSiteCurrent = arrDesignCurrent[siteNumberRelease]
         let designCurrentRatingTemp =
             1.2 * (designSiteCurrent + inputData.startingCurrent)
         let designCurrentRating = 0
@@ -331,9 +331,9 @@ Item {
             arrayLengthSum.push(sum)
         }
 
-        for(let i = 0; i < arrayLengthSum.length - 1; ++i) {
-            if(length > arrayLengthSum[i] && length < arrayLengthSum[i + 1]) {
-                return (i + 1)
+        for(let i = 0; i < arrayLengthSum.length; ++i) {
+            if(length <= arrayLengthSum[i]) {
+                return (i)
             }
         }
     }
@@ -348,23 +348,6 @@ Item {
 
         if(!sensitivityCondition) {
 
-            let activResistanceSum = 0;
-            let reactanceSum = 0;
-            for(let n = inputData.siteNumber; n < columnScroll_4.children.length; ++n) {
-                let arrResistance = parameterCalculation.getResistancePhaseZero(columnScroll_4.children[n].currentIndex)
-                activResistanceSum += (arrResistance[0] + arrResistance[1])
-                reactanceSum = +(arrResistance[2] + arrResistance[3])
-            }
-
-            let termalRelease = calculateThermalRelease(inputData.siteNumber)
-
-            let sensitivityConditionLength = parameterCalculation.calculationRecloser(root.componentTransformApp.transformerResistance,
-                                                     activResistanceSum,
-                                                     reactanceSum,
-                                                     termalRelease)
-
-            sensitivityConditionLength = Math.abs(sensitivityConditionLength)
-
             let arraySiteLength = parameterCalculation.getVecLengthSite()
             let arraySiteLengthSum = []
             let sum = 0
@@ -373,61 +356,90 @@ Item {
                 arraySiteLengthSum.push(sum)
             }
 
-            if((inputData.sensitivityConditionLength + sensitivityConditionLength)
-                    < arraySiteLengthSum[inputData.siteNumber]) {
+            function internalFunction() {
 
-                let flag = false
-                if(switchRecloser.checked) {
-                    flag = oneIterationOfSectionRecalculation()
+                let activResistanceSum = 0
+                let reactanceSum = 0
+                let count = 0
+                for(let n = inputData.siteNumber; n < columnScroll_4.children.length; ++n) {
+                    let arrResistance = parameterCalculation.getResistancePhaseZero(columnScroll_4.children[n].currentIndex)
+                    activResistanceSum += (arrResistance[0] + arrResistance[1])
+                    reactanceSum = +(arrResistance[2] + arrResistance[3])
+                    ++count
                 }
+                activResistanceSum /= count
+                reactanceSum /= count
 
-                if(flag) { //перерасчет сечения
-                    calculateParametrs()                   //расчет параметров
-                    calculateRecloser()                    //расчет СП
-                } else {
-                    dialogWarning.title = "Невозможно соблюсти условие чувствительности!"
-                    dialogWarning.visible = true
+                let thermalRelease = calculateThermalRelease(inputData.siteNumber)
 
-                    return
-                }
+                let sensitivityConditionLength = parameterCalculation.calculationRecloser(
+                                                         root.componentTransformApp.transformerResistance,
+                                                         activResistanceSum,
+                                                         reactanceSum,
+                                                         thermalRelease)
 
-            } else {
-                //Расчет следующего СП
+                sensitivityConditionLength = Math.abs(sensitivityConditionLength)
 
-                inputData.sensitivityConditionLength += sensitivityConditionLength
+                if((inputData.sensitivityConditionLength + sensitivityConditionLength)
+                        <= arraySiteLengthSum[inputData.siteNumber]) {
 
-                if(inputData.sensitivityConditionLength < arraySiteLengthSum[arraySiteLengthSum.length - 1]) {
-
-                    inputData.arrayRecloserLength.push(inputData.sensitivityConditionLength) //добавление в массив длин СП
-
-                    ++inputData.numberOfReclosers //запись количества СП
-
-                    inputData.siteNumber = findSite(inputData.sensitivityConditionLength)
-
-                    calculateRecloser()
-
-                } else {
-
-                    for(let elem = 0; elem < inputData.arrayRecloserLength.length; ++elem) {
-                        //Определение участка, на котором будет СП
-                        let siteNumber = findSite(inputData.arrayRecloserLength[elem])
-
-                        //Рассчет для каждого СП параметров защиты
-                        let thermalRelease = calculateThermalRelease(siteNumber).toFixed(inputData.toFixed)
-                        let electricalRelease = calculateElectromagneticRelease(siteNumber).toFixed(inputData.toFixed)
-
-                        componentRecloser.createObject(outData.columnScrollOutput_10, {
-                                                       "text": "№" + (elem + 1),
-                                                       "length": inputData.arrayRecloserLength[elem].toFixed(inputData.toFixed),
-                                                       "thermalRelease": thermalRelease,
-                                                       "electricalRelease": electricalRelease,
-                                                       "siteNumber": siteNumber + 1
-                                                   })
+                    let flag = false
+                    if(switchRecloser.checked) {
+                        flag = oneIterationOfSectionRecalculation()
                     }
 
-                    return
+                    if(flag) { //перерасчет сечения
+                        inputData.siteNumber = 0 //обнуление номера участка
+                        inputData.arrayRecloserLength = [] //обнуление массива расстояний до СП
+                        calculateParametrs()                   //расчет параметров
+                        internalFunction()                    //расчет СП
+                    } else {
+                        dialogWarning.title = "Невозможно соблюсти условие чувствительности!"
+                        dialogWarning.visible = true
+
+                        return
+                    }
+
+                } else {
+                    //Расчет следующего СП
+
+                    if((inputData.sensitivityConditionLength + sensitivityConditionLength) < arraySiteLengthSum[arraySiteLengthSum.length - 1]) {
+
+                        inputData.sensitivityConditionLength += sensitivityConditionLength
+
+                        inputData.arrayRecloserLength.push(inputData.sensitivityConditionLength) //добавление в массив длин СП
+
+                        ++inputData.numberOfReclosers //запись количества СП
+
+                        inputData.siteNumber = findSite(inputData.sensitivityConditionLength)
+
+                        internalFunction()
+
+                    } else {
+
+                        for(let elem = 0; elem < inputData.arrayRecloserLength.length; ++elem) {
+                            //Определение участка, на котором будет СП
+                            let siteNumber = findSite(inputData.arrayRecloserLength[elem])
+
+                            //Рассчет для каждого СП параметров защиты
+                            let thermalRelease = calculateThermalRelease(siteNumber).toFixed(inputData.toFixed)
+                            let electricalRelease = calculateElectromagneticRelease(siteNumber).toFixed(inputData.toFixed)
+
+                            componentRecloser.createObject(outData.columnScrollOutput_10, {
+                                                           "text": "№" + (elem + 1),
+                                                           "length": inputData.arrayRecloserLength[elem].toFixed(inputData.toFixed),
+                                                           "thermalRelease": thermalRelease,
+                                                           "electricalRelease": electricalRelease,
+                                                           "siteNumber": siteNumber + 1
+                                                       })
+                        }
+
+                        return
+                    }
                 }
             }
+
+            internalFunction()
 
         } else {
             //Сообщение, что расчет не требуется
@@ -690,6 +702,9 @@ Item {
         inputData.sensitivityConditionLength = 0    //расстояние до СП
         inputData.numberOfReclosers = 0             //количество СП
         inputData.siteNumber = 0                    //номер участка для СП
+
+        //canvCard.canvasContext?.clearRect(0, 0, canvCard.canvas.width * 5, canvCard.canvas.height * 5) //очистка холста
+        //canvCard.canvas.context.clearRect(0, 0, canvCard.canvas.width * 5, canvCard.canvas.height * 5)
     }
     /*******************************************************************************************************/
 
@@ -1252,20 +1267,33 @@ Item {
         property bool activeFocusOnWindow: {inpData.z > chartComp.z &&
                                             inpData.z > outData.z &&
                                             inpData.z > canvCard.z}
+        ScrollBar {
+            id: myvertscroll
+            anchors.left: scrollView.right
+            anchors.top: scrollView.top
+            anchors.bottom: scrollView.bottom
+            contentItem.opacity: 1
+        }
 
-        ScrollView {
+        Flickable {
             id: scrollView
 
-            visible: true
+            //visible: true
             clip: true
-            hoverEnabled: true
-            enabled: true
+            //hoverEnabled: true
+            //enabled: true
             contentHeight: 640
-            anchors.centerIn: parent
-            width: parent.width - 14
-            height: parent.height - 14
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 20
+            //width: parent.width - 14
+            //height: parent.height - 14
             anchors.topMargin: 7
             anchors.bottomMargin: 7
+
+            ScrollBar.vertical: myvertscroll
 
             MouseArea {
                 id: dragMouseArea
@@ -1692,7 +1720,9 @@ Item {
                                 if(checkBox1.checkState > 0) {
                                     checkBox2.checkState = 0
                                     checkBox3.checkState = 0
+                                    textFieldCheckBox2.text = ""
                                     textFieldCheckBox2.enabled = false
+                                    switchRecloser.enabled = true
                                 }
                             }
                         }
@@ -1709,7 +1739,7 @@ Item {
 
                             Switch {
                                 id: switchRecloser
-
+                                enabled: false
                             }
                         }
                     }
@@ -1728,6 +1758,8 @@ Item {
                                     checkBox1.checkState = 0
                                     checkBox3.checkState = 0
                                     textFieldCheckBox2.enabled = true
+                                    switchRecloser.enabled = false
+                                    switchRecloser.checked = false
                                 }
                             }
                         }
@@ -1758,7 +1790,10 @@ Item {
                             if(checkBox3.checkState > 0) {
                                 checkBox2.checkState = 0
                                 checkBox1.checkState = 0
+                                textFieldCheckBox2.text = ""
                                 textFieldCheckBox2.enabled = false
+                                switchRecloser.enabled = false
+                                switchRecloser.checked = false
                             }
 
                             //Сброс данных

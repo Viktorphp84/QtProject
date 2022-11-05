@@ -16,6 +16,8 @@ Rectangle {
                                         canvCard.z > inpData.z &&
                                         canvCard.z > outData.z}
 
+    property var canvasContext
+
     //Переменные для изменения размеров окна по двойному щелчку
     property int canvasX: 0
     property int canvasY: 0
@@ -232,6 +234,7 @@ Rectangle {
 
                 myContext.stroke()
                 canv.scale = 1
+                rootRect.canvasContext = myContext
             }
 
             MouseArea {
