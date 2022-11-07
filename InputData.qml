@@ -346,35 +346,37 @@ Item {
         let sensitivityCondition = (outData.columnScrollOutput_9.children[numberOfConsumers - 1] / 3 >=
             outData.thermalRelease) ? true : false
 
+        let arraySiteLength = parameterCalculation.getVecLengthSite()
+
+        let arraySiteLengthSum = []
+        let sum = 0
+        for(let item of arraySiteLength) {
+            sum = sum + item
+            arraySiteLengthSum.push(sum)
+        }
+
+        let activeResistanceSum = 0
+        let reactanceSum = 0
+
+        //Расчет средних удельных значений активного и реактивного сопротивлений для всей линии
+        for(let t = 0; t < numberOfConsumers; ++t) {
+            let arrResistance = parameterCalculation.getResistancePhaseZero(columnScroll_4.children[t].currentIndex)
+            activeResistanceSum += ( (arrResistance[0] + arrResistance[1]) * arraySiteLength[t] )
+            reactanceSum = +(arrResistance[2] + arrResistance[3]) * arraySiteLength[t]
+        }
+
+        activeResistanceSum /= arraySiteLengthSum[inputData.numberOfConsumers - 1]
+        reactanceSum /= arraySiteLengthSum[inputData.numberOfConsumers - 1]
+
         if(!sensitivityCondition) {
 
-            let arraySiteLength = parameterCalculation.getVecLengthSite()
-            let arraySiteLengthSum = []
-            let sum = 0
-            for(let item of arraySiteLength) {
-                sum = sum + item
-                arraySiteLengthSum.push(sum)
-            }
-
             function internalFunction() {
-
-                let activResistanceSum = 0
-                let reactanceSum = 0
-                let count = 0
-                for(let n = inputData.siteNumber; n < columnScroll_4.children.length; ++n) {
-                    let arrResistance = parameterCalculation.getResistancePhaseZero(columnScroll_4.children[n].currentIndex)
-                    activResistanceSum += (arrResistance[0] + arrResistance[1])
-                    reactanceSum = +(arrResistance[2] + arrResistance[3])
-                    ++count
-                }
-                activResistanceSum /= count
-                reactanceSum /= count
 
                 let thermalRelease = calculateThermalRelease(inputData.siteNumber)
 
                 let sensitivityConditionLength = parameterCalculation.calculationRecloser(
                                                          root.componentTransformApp.transformerResistance,
-                                                         activResistanceSum,
+                                                         activeResistanceSum,
                                                          reactanceSum,
                                                          thermalRelease)
 
@@ -1267,33 +1269,28 @@ Item {
         property bool activeFocusOnWindow: {inpData.z > chartComp.z &&
                                             inpData.z > outData.z &&
                                             inpData.z > canvCard.z}
-        ScrollBar {
-            id: myvertscroll
-            anchors.left: scrollView.right
-            anchors.top: scrollView.top
-            anchors.bottom: scrollView.bottom
-            contentItem.opacity: 1
-        }
+
 
         Flickable {
             id: scrollView
 
-            //visible: true
             clip: true
-            //hoverEnabled: true
-            //enabled: true
             contentHeight: 640
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.rightMargin: 20
-            //width: parent.width - 14
-            //height: parent.height - 14
             anchors.topMargin: 7
             anchors.bottomMargin: 7
 
-            ScrollBar.vertical: myvertscroll
+            ScrollBar.vertical: ScrollBar {
+                parent: scrollView.parent
+                anchors.left: scrollView.right
+                anchors.top: scrollView.top
+                anchors.bottom: scrollView.bottom
+                contentItem.opacity: 1
+            }
 
             MouseArea {
                 id: dragMouseArea

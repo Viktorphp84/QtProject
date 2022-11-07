@@ -37,14 +37,6 @@ Item {
 
     width: 677
     height: 360
-//    layer.enabled: true
-//    layer.effect: DropShadow {
-//        transparentBorder: true
-//        horizontalOffset: 3
-//        verticalOffset: 3
-//        radius: 5
-//        color: "#80000000"
-//    }
 
     DropShadow {
         anchors.fill: rectangleOutData
@@ -70,11 +62,28 @@ Item {
                                             outData.z > inpData.z &&
                                             outData.z > canvCard.z}
 
-        ScrollView {
+        Flickable {
+            id: flickableView
+
+            clip: true
             width: parent.width - 14
             height: parent.height - 14
             contentHeight: 600
-            anchors.centerIn: parent
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 20
+            anchors.topMargin: 7
+            anchors.bottomMargin: 7
+
+            ScrollBar.vertical: ScrollBar {
+                parent: flickableView.parent
+                anchors.left: flickableView.right
+                anchors.top: flickableView.top
+                anchors.bottom: flickableView.bottom
+                contentItem.opacity: 1
+            }
 
             MouseArea {
                 id: mousAreaOutput
@@ -703,7 +712,7 @@ Item {
                 anchors.left: parent.left
                 anchors.leftMargin: 120
                 anchors.top: scrollViewOutput.bottom
-                anchors.topMargin: 10
+                anchors.topMargin: 15
                 text: qsTr("Аппараты защиты и двигатель")
                 font.bold: true
                 font.pointSize: 20
@@ -714,7 +723,7 @@ Item {
                 id: labelFuse
                 anchors.top: labelProtectionDevice.bottom
                 anchors.left: parent.left
-                anchors.topMargin: 10
+                anchors.topMargin: 20
                 anchors.leftMargin: 20
                 text: qsTr("Номинальный ток предохранителя на ТП, А")
             }
