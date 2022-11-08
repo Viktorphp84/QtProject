@@ -21,16 +21,12 @@ Item {
             if (input.checkResistanceVectorPhaseZero()) {
                 input.calculationSinglePhaseShortCircuit(
                             root.componentTransformApp.transformerResistance) //расчет однофазного КЗ
-                let vecSinglePhaseShortCircuit = input.getVecSinglePhaseShortCircuit(
-                        ) //запись в вектор
+                let vecSinglePhaseShortCircuit = input.getVecSinglePhaseShortCircuit() //запись в вектор
 
                 for (var u = 0; u < input.numberOfConsumers; ++u) {
                     output.columnScrollOutput_9.children[u].textField = String(
                                 vecSinglePhaseShortCircuit[u]) //заполнение строк
                 }
-            } else {
-
-                //выводим сообщение, что для расчета однофазных КЗ нужно ввести все значения экономической плотности
             }
         }
     }
@@ -54,29 +50,51 @@ Item {
         property int widthFrame: tableView.contentWidth + leftTopRect.width + 23
 
         width: widthFrame
-        height: 320
+        height: 340
         radius: 5
 
         Label {
             id: grandLabelTrans
+
             anchors.top: parent.top
             anchors.topMargin: 10
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Параметры трансформатора"
-            font.bold: true
-            font.pointSize: 20
+            height: str1.height + str2.height
+
+            Text {
+                id: str1
+
+                font.bold: true
+                font.pointSize: 15
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                text: "Полные сопротивления трансформаторов 10/0.4 кВ"
+            }
+            Text {
+                id: str2
+
+                font.bold: true
+                font.pointSize: 15
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: str1.bottom
+                text: "при замыкании на корпус, Ом "
+            }
         }
 
         Rectangle {
             id: leftTopRect
+
             anchors.top: grandLabelTrans.bottom
+            anchors.topMargin: 10
             anchors.left: parent.left
             anchors.leftMargin: 10
             color: "#efefef"
             width: textLab.contentWidth + 10
             height: (tableView.contentHeight / tableView.rows) * 2
+
             Text {
                 id: textLab
+
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -88,6 +106,7 @@ Item {
 
         TableView {
             id: tableViewLeft
+
             anchors.left: parent.left
             anchors.top: leftTopRect.bottom
             anchors.right: leftTopRect.right
@@ -108,17 +127,28 @@ Item {
                     }, {
                         "name": "Y/Z<sub>0</sub>"
                     }, {
-                        "name": "&Delta;/Y<sub>0</sub"
+                        "name": "&Delta;/Y<sub>0</sub>"
                     }]
             }
 
             delegate: Label {
-                text: display
+
+                Text {
+                    anchors.top: parent.top
+                    anchors.topMargin: 12.5
+                    anchors.left: parent.left
+                    anchors.leftMargin: 25
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    text: display
+                    textFormat: Text.RichText
+                }
+
                 padding: 12
 
                 Rectangle {
                     id: rectDelegate
-                    //anchors.fill: parent
+
                     color: "#efefef"
                     z: -1
                     width: leftTopRect.width
@@ -134,6 +164,7 @@ Item {
         Rectangle {
             id: headerRect
             anchors.top: grandLabelTrans.bottom
+            anchors.topMargin: 10
             anchors.left: leftTopRect.right
             anchors.leftMargin: 2
             //anchors.leftMargin: 52
@@ -144,6 +175,11 @@ Item {
                 anchors.centerIn: parent
                 text: "Мощность, кВа"
             }
+        }
+
+        Rectangle {
+            id: rectCell
+            color: "#efefef"
         }
 
         TableView {
@@ -160,12 +196,9 @@ Item {
 
             model: c_model
 
+            property var object: rectCell
 
-            /*selectionModel: ItemSelectionModel {
-                model: tableView.model
-            }*/
-            property var object: Rectangle {}
-            property int columnTable: 0
+            property int columnTable: (tableView.columns * tableView.rows - 1)
             property int indexCell: 0
             property string textCell: ""
 
@@ -208,6 +241,7 @@ Item {
                     propagateComposedEvents: true
 
                     onClicked: {
+
                         if (tableView.object === rectDelTableView) {
                             if (rectDelTableView.color == "#efefef") {
                                 rectDelTableView.color = "gray"
@@ -280,47 +314,50 @@ Item {
         Button {
             id: buttonAdd
             anchors.top: tableView.bottom
-            anchors.bottom: parent.bottom
+            anchors.topMargin: 5
             anchors.left: parent.left
             anchors.leftMargin: 50
-            anchors.bottomMargin: 15
-            width: 120
             text: "Добавить колонку"
+            width: 120
+            height: 35
+
             onClicked: {
-                //c_model.index()
-                tableView.object.color = "#efefef"
-                c_model.addColumn()
-                transRect.widthFrame = leftTopRect.width + tableView.contentWidth + 75
+                if(transRect.width < transCard.width - 60) {
+                    tableView.object.color = "#efefef"
+                    c_model.addColumn()
+                    transRect.widthFrame = leftTopRect.width + tableView.contentWidth + 75
+                }
             }
         }
 
         Button {
             id: buttonDel
-            anchors.top: tableView.bottom
+
+            anchors.verticalCenter: buttonAdd.verticalCenter
             anchors.left: buttonAdd.right
-            width: 120
             anchors.leftMargin: 10
-            anchors.bottomMargin: 15
-            anchors.bottom: parent.bottom
-            anchors.margins: 2
             text: "Удалить колонку"
+            width: 120
+            height: 35
+
             onClicked: {
-                tableView.object.color = "#efefef"
-                c_model.deleteColumn(tableView.columnTable)
-                transRect.widthFrame = leftTopRect.width + tableView.contentWidth - 28
+                if(tableView.columns > 8) {
+                    tableView.object.color = "#efefef"
+                    c_model.deleteColumn(tableView.columnTable)
+                    transRect.widthFrame = leftTopRect.width + tableView.contentWidth - 28
+                }
             }
         }
 
         Button {
             id: buttonSave
+
             anchors.left: buttonDel.right
-            width: 120
             anchors.leftMargin: 10
-            anchors.bottomMargin: 15
-            anchors.top: tableView.bottom
-            anchors.bottom: parent.bottom
-            anchors.margins: 2
+            anchors.verticalCenter: buttonDel.verticalCenter
             text: "Сохранить"
+            width: 120
+            height: 35
 
             onClicked: {
                 tableView.model.writeData(tableView.indexCell,
@@ -330,16 +367,18 @@ Item {
 
         Button {
             id: buttonReset
-            anchors.top: tableView.bottom
-            anchors.bottom: parent.bottom
+
             anchors.left: buttonSave.right
-            width: 120
             anchors.leftMargin: 10
-            anchors.bottomMargin: 15
-            anchors.margins: 2
+            anchors.verticalCenter: buttonSave.verticalCenter
             text: "Сбросить"
+            width: 120
+            height: 35
+
             onClicked: {
                 c_model.setDefaultModel()
+                tableView.object = rectCell
+                transRect.widthFrame = leftTopRect.width + 414 + 23
             }
         }
     }

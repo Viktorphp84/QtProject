@@ -17,18 +17,17 @@ ApplicationWindow {
 
     function onAcceptedDialog() {
 
-        dynamicTabBar.addItem(componentTabButton.createObject(dynamicTabBar, {
-                                                                  "text": "Параметры трансформатора"
-                                                              }))
+        dynamicTabBar.addItem(componentTabButton.createObject(dynamicTabBar, {"text": "Параметры трансформатора"}))
+
         componentTransformApp = componentTransform.createObject(stackTab)
 
         for (var i = 0; i < numInt; ++i) {
+
             var string = ' Линия ' + (i + 1) + ' '
-            dynamicTabBar.addItem(componentTabButton.createObject(
-                                      dynamicTabBar, {
-                                          "text": string
-                                      }))
+            dynamicTabBar.addItem(componentTabButton.createObject(dynamicTabBar, {"text": string}))
+
             let compCardsApp = componentCards.createObject(stackTab)
+
             componentCardsApp.push(compCardsApp)
         }
 
