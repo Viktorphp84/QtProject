@@ -141,8 +141,10 @@ Rectangle {
 
             onPaint: {
                 var myContext = getContext("2d")
+                rootRect.canvasContext = myContext
                 myContext.lineWidth = 1.5
                 myContext.strokeStyle = "steelblue"
+                let multiplier = 300 //множитель для отрисовки расстояний между потребителями, умножается на длину участка
 
                 lastX = area.mouseX - deltaX
                 lastY = area.mouseY - deltaY
@@ -154,8 +156,9 @@ Rectangle {
 
                 if(count > 0) myContext.scale(scale, scale)
 
-                if(inpData.numberOfConsumers) {
-                    myContext.clearRect(0, 0, canv.width * 5, canv.height * 5) //очистка холста
+                myContext.clearRect(0, 0, canv.width * 5, canv.height * 5) //очистка холста
+
+                if(inpData.numberOfConsumers && inpData.checkField("for canvas")) {
 
                     myContext.beginPath() //начало отрисовки
 
@@ -190,8 +193,20 @@ Rectangle {
 
                     let savePoint = startX + 2 * radius
 
+                    //Вычисление множителя для отрисовки
+                    for(let y = 0; y < inpData.numberOfConsumers; ++y) {
+                        if(inpData.arrayLengthSite[y] >= 0.08 && inpData.arrayLengthSite[y] < 0.15) multiplier = 500
+                        if(inpData.arrayLengthSite[y] >= 0.04 && inpData.arrayLengthSite[y] < 0.08) multiplier = 1000
+                        if(inpData.arrayLengthSite[y] >= 0.02 && inpData.arrayLengthSite[y] < 0.04) multiplier = 2000
+                        if(inpData.arrayLengthSite[y] >= 0.01 && inpData.arrayLengthSite[y] < 0.02) multiplier = 4000
+                        if(inpData.arrayLengthSite[y] >= 0.005 && inpData.arrayLengthSite[y] < 0.01) multiplier = 8000
+                        if(inpData.arrayLengthSite[y] >= 0.003 && inpData.arrayLengthSite[y] < 0.005) multiplier = 16000
+                        if(inpData.arrayLengthSite[y] < 0.003) multiplier = 40000
+                    }
+
                     for(let i = 0; i < inpData.numberOfConsumers; ++i) {
-                        savePoint = savePoint + inpData.arrayLengthSite[i] * 300
+
+                        savePoint = savePoint + inpData.arrayLengthSite[i] * multiplier
                         myContext.lineTo(savePoint, startY)
                         myContext.lineTo(savePoint, startY + 100)
                         myContext.moveTo(savePoint, startY + 100 + 1)
@@ -234,7 +249,6 @@ Rectangle {
 
                 myContext.stroke()
                 canv.scale = 1
-                rootRect.canvasContext = myContext
             }
 
             MouseArea {

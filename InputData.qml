@@ -73,6 +73,40 @@ Item {
     }
     /*******************************************************************************************************/
 
+    //Проверка, что все поля заполнены
+    /*******************************************************************************************************/
+    function checkField(target) {
+
+        numberOfConsumers = columnScroll_1.children.length
+
+        for (let r = 0; r < numberOfConsumers; ++r) {
+            let strActivLoad = columnScroll_1.children[r].textField
+            let strLengthSite = columnScroll_2.children[r].textField
+            let strActivPowerCoef = columnScroll_3.children[r].textField
+            if (strActivLoad === "" ||
+                strActivPowerCoef === "" ||
+                strLengthSite === "" ||
+                (columnScroll_4.children[r].currentIndex === 0 && checkBox3.checkState === 0) ||
+                    checkBox2.checkState && inputData.percentageLoss === "") {
+
+                if(target === "for calculating") {
+                    dialogWarning.title = "Заполнены не все поля!"
+                    dialogWarning.visible = true
+                }
+
+                return 0
+            } else {
+                //Заполнение данных
+                parameterCalculation.setVecActivLoad(parseFloat(strActivLoad))
+                inputData.arrayActivePower.push(strActivLoad) //массив мощностей для отображения на схеме
+                parameterCalculation.setVecLengthSite(parseFloat(strLengthSite))
+                parameterCalculation.setActivPowerCoefficient(parseFloat(strActivPowerCoef))
+            }
+        }
+        return 1
+    }
+    /*******************************************************************************************************/
+
     //Расчет параметров линии
     /*******************************************************************************************************/
     function calculateParametrs() {
@@ -89,26 +123,8 @@ Item {
         parameterCalculation.fillingResistanceVectorPhaseZero()
         /*******************************************************************************************/
 
-        for (let r = 0; r < numberOfConsumers; ++r) {
-            let strActivLoad = columnScroll_1.children[r].textField
-            let strLengthSite = columnScroll_2.children[r].textField
-            let strActivPowerCoef = columnScroll_3.children[r].textField
-            if (strActivLoad === "" ||
-                strActivPowerCoef === "" ||
-                strLengthSite === "" ||
-                (arrWire[r].currentIndex === 0 && checkBox3.checkState === 0) ||
-                    checkBox2.checkState && inputData.percentageLoss === "") {
-
-                dialogWarning.title = "Заполнены не все поля!"
-                dialogWarning.visible = true
-                return 0
-            } else {
-                //Заполнение данных
-                parameterCalculation.setVecActivLoad(parseFloat(strActivLoad))
-                inputData.arrayActivePower.push(strActivLoad) //массив мощностей для отображения на схеме
-                parameterCalculation.setVecLengthSite(parseFloat(strLengthSite))
-                parameterCalculation.setActivPowerCoefficient(parseFloat(strActivPowerCoef))
-            } 
+        if(!checkField("for calculating")) {
+            return 0
         }
 
         inputData.arrayLengthSite = parameterCalculation.getVecLengthSite()//сохранение вектора длин участков в массив
@@ -704,9 +720,6 @@ Item {
         inputData.sensitivityConditionLength = 0    //расстояние до СП
         inputData.numberOfReclosers = 0             //количество СП
         inputData.siteNumber = 0                    //номер участка для СП
-
-        //canvCard.canvasContext?.clearRect(0, 0, canvCard.canvas.width * 5, canvCard.canvas.height * 5) //очистка холста
-        //canvCard.canvas.context.clearRect(0, 0, canvCard.canvas.width * 5, canvCard.canvas.height * 5)
     }
     /*******************************************************************************************************/
 
@@ -1406,6 +1419,7 @@ Item {
                         }
 
                         parameterCalculation.fillingResistanceVectorPhaseZero()
+                        canvCard.canvas.requestPaint()
                     }
                 }
 
@@ -1993,8 +2007,10 @@ Item {
                             calculateRecloser()
                         }
 
+//                        canvCard.canvasContext.clearRect(0, 0, canvCard.canvasContext.width * 5,
+//                                                               canvCard.canvasContext.height * 5)
                         canvCard.canvas.requestPaint()
-                    }
+                    }                
                 }
             }
             /**********************************************************************************************************/

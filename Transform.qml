@@ -255,7 +255,11 @@ Item {
                             rectDelTableView.color = "gray"
                         }
                         textEdited.forceActiveFocus()
-                        tableView.columnTable = index
+
+                        if(index > 31) {
+                            tableView.columnTable = index
+                        }
+
                         if (index % 4) {
                             transCard.transformerResistance = parseFloat(display)
 
