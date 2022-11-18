@@ -23,6 +23,7 @@ Item {
 
     property var arrayLengthSite: [] //массив длин участков
     property var arrayActivePower: [] //масив активных мощностей
+    property var arrSinglePhaseShortCircuit: [] //массив КЗ
 
     //Двигатель
     property double startingCurrentRatio: 0 //кратность пускового тока
@@ -51,6 +52,8 @@ Item {
     property int inputDataX: 0
     property int inputDataY: 0
     property int inputDataHeigth: 0
+
+    property alias columnScroll_4: columnScroll_4
 
     DropShadow {
         anchors.fill: rectangleInputData
@@ -176,7 +179,8 @@ Item {
                 /******************************************************************************************/
 
                 //Расчет однофазного КЗ
-                vectorSinglePhaseShortCircuit = calculateSinglePhaseShortCircuit()
+                inputData.arrSinglePhaseShortCircuit = []
+                vectorSinglePhaseShortCircuit = inputData.arrSinglePhaseShortCircuit = calculateSinglePhaseShortCircuit()
 
                 //Расчет потерь напряжения и добавление точек на график потерь напряжения
                 calculateVoltageLoss(vectorVoltageLoss, vectorVoltageLossPercent,
@@ -359,7 +363,9 @@ Item {
     /*******************************************************************************************************/
     function calculateRecloser() {
 
-        let sensitivityCondition = (outData.columnScrollOutput_9.children[numberOfConsumers - 1] / 3 >=
+        inputData.arrSinglePhaseShortCircuit = parameterCalculation.getVecSinglePhaseShortCircuit()
+
+        let sensitivityCondition = (arrSinglePhaseShortCircuit[inputData.numberOfConsumers - 1] / 3 >=
             outData.thermalRelease) ? true : false
 
         let arraySiteLength = parameterCalculation.getVecLengthSite()
@@ -384,6 +390,9 @@ Item {
         activeResistanceSum /= arraySiteLengthSum[inputData.numberOfConsumers - 1]
         reactanceSum /= arraySiteLengthSum[inputData.numberOfConsumers - 1]
 
+        let flag = false
+        let tr = 0 //переменная для сохранения номинала теплового расцепителя для последнего СП
+
         if(!sensitivityCondition) {
 
             function internalFunction() {
@@ -401,15 +410,14 @@ Item {
                 if((inputData.sensitivityConditionLength + sensitivityConditionLength)
                         <= arraySiteLengthSum[inputData.siteNumber]) {
 
-                    let flag = false
                     if(switchRecloser.checked) {
                         flag = oneIterationOfSectionRecalculation()
                     }
 
-                    if(flag) { //перерасчет сечения
-                        inputData.siteNumber = 0 //обнуление номера участка
-                        inputData.arrayRecloserLength = [] //обнуление массива расстояний до СП
-                        calculateParametrs()                   //расчет параметров
+                    if(flag) {                                //перерасчет сечения
+                        inputData.siteNumber = 0              //обнуление номера участка
+                        inputData.arrayRecloserLength = []    //обнуление массива расстояний до СП
+                        calculateParametrs()                  //расчет параметров
                         internalFunction()                    //расчет СП
                     } else {
                         dialogWarning.title = "Невозможно соблюсти условие чувствительности!"
@@ -435,24 +443,62 @@ Item {
 
                     } else {
 
-                        for(let elem = 0; elem < inputData.arrayRecloserLength.length; ++elem) {
-                            //Определение участка, на котором будет СП
-                            let siteNumber = findSite(inputData.arrayRecloserLength[elem])
+                        if(inputData.arrayRecloserLength.length != 0) {
 
-                            //Рассчет для каждого СП параметров защиты
-                            let thermalRelease = calculateThermalRelease(siteNumber).toFixed(inputData.toFixed)
-                            let electricalRelease = calculateElectromagneticRelease(siteNumber).toFixed(inputData.toFixed)
+                            for(let elem = 0; elem < inputData.arrayRecloserLength.length; ++elem) {
+                                //Определение участка, на котором будет СП
+                                let siteNumber = findSite(inputData.arrayRecloserLength[elem])
 
-                            componentRecloser.createObject(outData.columnScrollOutput_10, {
-                                                           "text": "№" + (elem + 1),
-                                                           "length": inputData.arrayRecloserLength[elem].toFixed(inputData.toFixed),
-                                                           "thermalRelease": thermalRelease,
-                                                           "electricalRelease": electricalRelease,
-                                                           "siteNumber": siteNumber + 1
-                                                       })
+                                //Рассчет для каждого СП параметров защиты
+                                let thermalRelease = calculateThermalRelease(siteNumber).toFixed(inputData.toFixed)
+                                tr = thermalRelease
+                                let electricalRelease = calculateElectromagneticRelease(siteNumber).toFixed(inputData.toFixed)
+
+                                componentRecloser.createObject(outData.columnScrollOutput_10, {
+                                                               "text": "№" + (elem + 1),
+                                                               "length": inputData.arrayRecloserLength[elem].toFixed(inputData.toFixed),
+                                                               "thermalRelease": thermalRelease,
+                                                               "electricalRelease": electricalRelease,
+                                                               "siteNumber": siteNumber + 1
+                                                           })
+                            }
+
+                            if(Number(tr) <= inputData.arrSinglePhaseShortCircuit[inputData.numberOfConsumers - 1] / 3) {
+
+                                return
+
+                            } else {
+
+                                if(switchRecloser.checked) {
+
+                                    if(oneIterationOfSectionRecalculation()) {      //перерасчет сечения
+                                        inputData.siteNumber = 0                    //обнуление номера участка
+                                        inputData.arrayRecloserLength = []          //обнуление массива расстояний до СП
+                                        calculateParametrs()                        //расчет параметров
+                                        internalFunction()                          //расчет СП
+                                    } else {
+                                        dialogWarning.title = "Невозможно соблюсти условие чувствительности!"
+                                        dialogWarning.visible = true
+
+                                        return
+                                    }
+
+                                } else {
+                                    dialogWarning.title = "Невозможно соблюсти условие чувствительности!"
+                                    dialogWarning.visible = true
+
+                                    return
+                                }
+
+
+                            }
+
+                        } else {
+                            dialogWarning.title = "Установка СП не требуется!"
+                            dialogWarning.visible = true
+
+                            return
                         }
-
-                        return
                     }
                 }
             }
@@ -461,7 +507,6 @@ Item {
 
         } else {
             //Сообщение, что расчет не требуется
-
             dialogWarning.title = "Установка СП не требуется!"
             dialogWarning.visible = true
 
@@ -722,25 +767,6 @@ Item {
         inputData.siteNumber = 0                    //номер участка для СП
     }
     /*******************************************************************************************************/
-
-    //signal signalEconomicSection(real economicSection)
-
-
-    /*Connections {
-        target: inputData
-        function onSignalEconomicSection(economicSection) {
-            parameterCalculation.setEconomicSection(economicSection)
-            //parameterCalculation.getVecEconomicSection()
-        }
-    }*/
-//    layer.enabled: true
-//    layer.effect: DropShadow {
-//        transparentBorder: true
-//        horizontalOffset: 3
-//        verticalOffset: 3
-//        radius: 5
-//        color: "#80000000"
-//    }
 
     Drag.active: dragMouseArea.drag.active
 
@@ -2007,8 +2033,6 @@ Item {
                             calculateRecloser()
                         }
 
-//                        canvCard.canvasContext.clearRect(0, 0, canvCard.canvasContext.width * 5,
-//                                                               canvCard.canvasContext.height * 5)
                         canvCard.canvas.requestPaint()
                     }                
                 }

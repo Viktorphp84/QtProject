@@ -28,6 +28,19 @@ Rectangle {
 
     property double transformerPower: 0
 
+    property var wireSectionArray: ["неизвестно",
+                                    "3x16+1x25",
+                                    "3x25+1x35",
+                                    "3x35+1x50",
+                                    "3x50+1x70",
+                                    "3x70+1x95",
+                                    "3x95+1x95",
+                                    "3x120+1x95",
+                                    "3x150+1x95",
+                                    "3x185+1x95",
+                                    "3x240+1x95"
+    ]
+
     MouseArea {
         id: mouseRectCanvas
         anchors.fill: parent
@@ -97,6 +110,7 @@ Rectangle {
 
         Canvas {
             id: canv
+
             anchors.top: parent.top
             anchors.topMargin: 4
             anchors.bottom: parent.bottom
@@ -194,15 +208,8 @@ Rectangle {
                     let savePoint = startX + 2 * radius
 
                     //Вычисление множителя для отрисовки
-                    for(let y = 0; y < inpData.numberOfConsumers; ++y) {
-                        if(inpData.arrayLengthSite[y] >= 0.08 && inpData.arrayLengthSite[y] < 0.15) multiplier = 500
-                        if(inpData.arrayLengthSite[y] >= 0.04 && inpData.arrayLengthSite[y] < 0.08) multiplier = 1000
-                        if(inpData.arrayLengthSite[y] >= 0.02 && inpData.arrayLengthSite[y] < 0.04) multiplier = 2000
-                        if(inpData.arrayLengthSite[y] >= 0.01 && inpData.arrayLengthSite[y] < 0.02) multiplier = 4000
-                        if(inpData.arrayLengthSite[y] >= 0.005 && inpData.arrayLengthSite[y] < 0.01) multiplier = 8000
-                        if(inpData.arrayLengthSite[y] >= 0.003 && inpData.arrayLengthSite[y] < 0.005) multiplier = 16000
-                        if(inpData.arrayLengthSite[y] < 0.003) multiplier = 40000
-                    }
+                    let minLength = Math.min(...inpData.arrayLengthSite)
+                    multiplier = 80 / minLength
 
                     for(let i = 0; i < inpData.numberOfConsumers; ++i) {
 
@@ -215,12 +222,36 @@ Rectangle {
                         myContext.lineTo(savePoint, startY + 100 + 1)
                         myContext.stroke()
 
-                        //Отображение мощности
+                        //Отображение мощности, длины и сечения
                         myContext.beginPath()
                         myContext.strokeStyle = "black"
                         myContext.font = "15px sans-serif"
-                        let activePowerLength = (String(inpData.arrayActivePower[i] + " кВт")).length * 6 / 2
-                        myContext.text(String(inpData.arrayActivePower[i] + " кВт"), savePoint - activePowerLength, startY + 100 + 1 + 15)
+
+                        //мощность
+                        let activePowerWordLength = (String(inpData.arrayActivePower[i] + " кВт")).length * 6 / 2
+                        myContext.text(String(inpData.arrayActivePower[i] + " кВт"),
+                                       savePoint - activePowerWordLength, startY + 100 + 1 + 15)
+
+                        //номер участка
+                        let numberOfSiteWordLength = (String("№" + i)).length * 6 / 2
+                        myContext.text(String("№" + (i + 1)),
+                                       (savePoint - inpData.arrayLengthSite[i] * multiplier / 2 - numberOfSiteWordLength),
+                                       startY + 35)
+
+                        //длина
+                        let arrayLengthSiteWordLength = (String(inpData.arrayLengthSite[i] + " км")).length * 6 / 2
+                        myContext.text(String(inpData.arrayLengthSite[i] + " км"),
+                                       (savePoint - inpData.arrayLengthSite[i] * multiplier / 2 - arrayLengthSiteWordLength),
+                                       startY + 55)
+
+                        //сечение
+                        const index = inpData.columnScroll_4.children[i].currentIndex
+                        const wireSectionString = wireSectionArray[index]
+                        let wireSectionWordLength = wireSectionString.length * 8 / 2
+                        myContext.text(wireSectionString,
+                                       (savePoint - inpData.arrayLengthSite[i] * multiplier / 2 - wireSectionWordLength),
+                                       startY + 75)
+
                         myContext.stroke()
 
                         myContext.beginPath()
@@ -228,24 +259,68 @@ Rectangle {
                         myContext.strokeStyle = "steelblue"
                         myContext.moveTo(savePoint, startY)
                     }
+
+                    if(inpData.arrayRecloserLength.length > 0) {
+
+                        //Отрисовка СП
+
+                        myContext.beginPath()
+                        myContext.lineWidth = 1
+                        myContext.strokeStyle = "black"
+
+                        savePoint = startX + 2 * radius
+
+                        let arrDistanceBetweenReclosers = []
+                        arrDistanceBetweenReclosers.push(inpData.arrayRecloserLength[0])
+                        for(let v = 1; v < inpData.arrayRecloserLength.length; ++v) {
+                            arrDistanceBetweenReclosers.push(inpData.arrayRecloserLength[v] - inpData.arrayRecloserLength[v - 1])
+                        }
+
+                        for(let k = 0; k < inpData.arrayRecloserLength.length; ++k) {
+
+                            myContext.moveTo(savePoint, startY)
+                            myContext.lineTo(savePoint, startY - 50)
+                            myContext.moveTo(savePoint, startY - 40)
+                            myContext.lineTo(savePoint + 10, startY - 45)
+                            myContext.moveTo(savePoint, startY - 40)
+                            myContext.lineTo(savePoint + 10, startY - 35)
+                            myContext.moveTo(savePoint, startY - 40)
+                            myContext.stroke()
+
+                            //отрисовка расстояний до СП
+                            myContext.beginPath()
+                            myContext.strokeStyle = "black"
+                            myContext.lineWidth = 1.5
+                            myContext.font = "15px sans-serif"
+
+                            let lengthToRecloserWordLength =
+                                (String(arrDistanceBetweenReclosers[k].toFixed(4) + " км")).length * 6 / 2
+                            myContext.text(String((arrDistanceBetweenReclosers[k]).toFixed(4) + " км"),
+                                           savePoint + arrDistanceBetweenReclosers[k] * multiplier / 2 - lengthToRecloserWordLength,
+                                           startY - 60)
+                            myContext.text("СП№" + (k + 1), savePoint + arrDistanceBetweenReclosers[k] * multiplier + 15,
+                                           startY - 20)
+                            myContext.stroke()
+
+                            myContext.beginPath()
+                            myContext.lineWidth = 1
+                            myContext.strokeStyle = "black"
+
+                            myContext.moveTo(savePoint, startY - 40)
+
+                            savePoint = startX + 2 * radius + inpData.arrayRecloserLength[k] * multiplier
+
+                            myContext.lineTo(savePoint, startY - 40)
+                            myContext.lineTo(savePoint - 10, startY - 45)
+                            myContext.moveTo(savePoint - 10, startY - 35)
+                            myContext.lineTo(savePoint, startY - 40)
+                            myContext.moveTo(savePoint, startY - 50)
+                            myContext.lineTo(savePoint, startY - 15)
+                            myContext.fillRect(savePoint - 15, startY - 15, 30, 30)
+                        }
+                    }
                     /*******************************************************************************************/
                 }
-
-
-//                myContext.lineTo(startX + radius + lineX, startY)
-//                myContext.strokeRect(startX + radius + lineX, startY - lengthRect / 2, lengthRect, lengthRect)
-//                myContext.moveTo(startX + radius + lineX + lengthRect, startY)
-//                myContext.lineTo(startX + 310, startY)
-//                myContext.moveTo(startX + 110, startY)
-//                myContext.lineTo(startX + 110, startY + 100)
-//                myContext.lineTo(startX + 110 - 10, startY + 100 - 10)
-//                myContext.moveTo(startX + 110, startY + 100)
-//                myContext.lineTo(startX + 110 + 10, startY + 100 - 10)
-//                myContext.moveTo(startX + 310, startY)
-//                myContext.lineTo(startX + 310, startY + 100)
-//                myContext.lineTo(startX + 310 - 10, startY + 100 - 10)
-//                myContext.moveTo(startX + 310, startY + 100)
-//                myContext.lineTo(startX + 310 + 10, startY + 100 - 10)
 
                 myContext.stroke()
                 canv.scale = 1
