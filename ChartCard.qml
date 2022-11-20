@@ -39,8 +39,8 @@ Item {
 
     Rectangle {
         id: rectChart
-        width: 677
-        height: 300
+        width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
+        height: (Screen.desktopAvailableHeight / 2.4 < 300) ? 300 : Screen.desktopAvailableHeight / 2.4 //300
         radius: 5
         border.color: "#d1d1d1"
         border.width: 2
@@ -131,9 +131,9 @@ Item {
             drag {
                 target: rectChart
                 minimumX: 0
-                minimumY: -inpData.height
+                minimumY: -(Screen.desktopAvailableHeight / 2)
                 maximumX: backgroundRectangle.width - rectChart.width
-                maximumY: backgroundRectangle.height - rectChart.height - inpData.height
+                maximumY: backgroundRectangle.height - Screen.desktopAvailableHeight / 2 - rectChart.height
             }
 
             onDoubleClicked: {

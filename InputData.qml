@@ -7,10 +7,13 @@ import QtCharts
 
 Item {
     id: inputData
-    width: 677
-    height: 360
+    width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
+    height: (Screen.desktopAvailableHeight / 2 < 360) ? 360 : Screen.desktopAvailableHeight / 2 //360
 
     property var component
+
+    signal signalCalculateTransformerPower(double transPow, int compNum)
+    property double transformerPowerForCalculation: 0 //мощность для расчета полной мощности трансформатора
 
     property int toFixed: 6 //указывает до скольки знаков будут округляться результаты расчетов при выводе в строки
 
@@ -187,6 +190,9 @@ Item {
                                      vectorVoltageLossSum, vectorVoltageLossSumPercent)
             }
 
+            inputData.transformerPowerForCalculation = vectorFullPower[0]
+            signalCalculateTransformerPower(inputData.transformerPowerForCalculation, inpData.componentNumber)
+
             //Построение строк в окне вывода данных
             loadOutputLine(vectorSiteLoads,
                            vectorWeightedAverage,
@@ -257,7 +263,7 @@ Item {
             temp = k * inputData.sumDesignCurrentConsumer
         }
 
-        let arrayRatedCurrentFuse = [2, 4, 6.3, 10, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160,
+        let arrayRatedCurrentFuse = [0, 2, 4, 6.3, 10, 16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160,
                                      200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500]
 
         //let fuseRatingTemp = inputData.sumDesignCurrentConsumer >= temp ? inputData.sumDesignCurrentConsumer : temp
@@ -312,7 +318,7 @@ Item {
     //Расчет электромагнитного расцепителя
     /*******************************************************************************************************/
     function calculateElectromagneticRelease(siteNumberRelease) {
-        let arrThermalRelease = [1, 2, 4, 5, 6, 8, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160
+        let arrThermalRelease = [0, 1, 2, 4, 5, 6, 8, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160
                                  , 180, 200, 225, 250, 320, 400, 500, 630, 800, 1000, 1600, 2500, 4000, 6300]
         let arrDesignCurrent = parameterCalculation.getVecDesignCurrent()
         let designSiteCurrent = arrDesignCurrent[siteNumberRelease]
@@ -1592,7 +1598,7 @@ Item {
 
                         Label {
                             id: labelTransformerPower
-                            text: qsTr("Мощность трансформатора, кВа")
+                            text: qsTr("Мощность трансформатора, кВА")
                         }
 
                         TextField {

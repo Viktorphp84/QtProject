@@ -35,8 +35,8 @@ Item {
     property int outputDataWidth: 0
     property int outputDataHeight: 0
 
-    width: 677
-    height: 360
+    width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
+    height: (Screen.desktopAvailableHeight / 2 < 360) ? 360 : Screen.desktopAvailableHeight / 2 //360
 
     DropShadow {
         anchors.fill: rectangleOutData

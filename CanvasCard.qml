@@ -5,8 +5,8 @@ import QtQuick.Shapes
 
 Rectangle {
     id: rootRect
-    width: 677
-    height: 300
+    width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
+    height: (Screen.desktopAvailableHeight / 2.4 < 300) ? 300 : Screen.desktopAvailableHeight / 2.4 //300
     border.color: "#d1d1d1"
     border.width: 2
     radius: 5
@@ -354,35 +354,6 @@ Rectangle {
                 }
             }
         }
-
-
-        /*WheelHandler {
-            property: "scale"
-            target: canv
-
-        }
-
-        DragHandler {
-            target: canv
-        }*/
-
-        /*Drag.active: mouseRectCanvas.drag.active
-
-        MouseArea {
-            id: mouseRectCanvas
-            anchors.fill: parent
-            drag {
-                target: rectCanv
-                minimumX: 0
-                minimumY: 0
-                maximumX: backgroundRectangle.width - rectCanv.width
-                maximumY: backgroundRectangle.height - rectCanv.height
-            }
-
-            onContainsMouseChanged: {
-                canvCard.z = chartComp.z + outData.z + inpData.z + 1
-            }
-        }*/
     }
 
     //Нижняя область для изменения размера

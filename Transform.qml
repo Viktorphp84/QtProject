@@ -11,6 +11,7 @@ Item {
     height: root.height
 
     property double transformerResistance: 0
+    property alias textTransPower: textFieldTransPower.text
 
     //Расчет однофазного КЗ
     function calcSinglePhaseShortCircuit() {
@@ -28,6 +29,88 @@ Item {
                                 vecSinglePhaseShortCircuit[u]) //заполнение строк
                 }
             }
+        }
+    }
+
+    DropShadow {
+        id: dropShadowTransPower
+        anchors.fill: rectTransformerPower
+        source: rectTransformerPower
+        transparentBorder: true
+        horizontalOffset: 3
+        verticalOffset: 3
+        radius: 5
+        color: "#80000000"
+    }
+
+    Rectangle {
+        id: rectTransformerPower
+        x: transCard.width - rectTransformerPower.width
+        y: 0
+
+        width: 300
+        height: 120
+        radius: 5
+        border.color: "#e4e4e4"
+        border.width: 1
+
+        Text {
+            id: text1
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            text: "Рекомендуемая мощность"
+
+            font.bold: true
+            font.pointSize: 15
+        }
+
+        Text {
+            id: text2
+            anchors.top: text1.bottom
+            anchors.topMargin: -5
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "трансформатора"
+
+            font.bold: true
+            font.pointSize: 15
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            propagateComposedEvents: true
+
+            onClicked: {
+                rectTransformerPower.z = 10
+                transRect.z = 0
+            }
+        }
+
+        RowLayout {
+            anchors.top: text2.bottom
+            anchors.topMargin: 15
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            TextField {
+                id: textFieldTransPower
+
+                readOnly: true
+            }
+
+            Label {
+                text: "кВА"
+            }
+        }
+
+        DragHandler {
+            target: rectTransformerPower
+
+            xAxis.enabled: true
+            xAxis.minimum: 0
+            xAxis.maximum: backgroundRectangle.width - rectTransformerPower.width
+            yAxis.enabled: true
+            yAxis.minimum: 0
+            yAxis.maximum: backgroundRectangle.height - rectTransformerPower.height
         }
     }
 
@@ -52,6 +135,15 @@ Item {
         width: widthFrame
         height: 340
         radius: 5
+
+        MouseArea {
+            anchors.fill: parent
+
+            onClicked: {
+                rectTransformerPower.z = 0
+                transRect.z = 10
+            }
+        }
 
         Label {
             id: grandLabelTrans
@@ -173,7 +265,7 @@ Item {
             height: tableView.contentHeight / tableView.rows
             Text {
                 anchors.centerIn: parent
-                text: "Мощность, кВа"
+                text: "Мощность, кВА"
             }
         }
 
@@ -385,15 +477,15 @@ Item {
                 transRect.widthFrame = leftTopRect.width + 414 + 23
             }
         }
-    }
 
-    DragHandler {
-        target: transRect
-        xAxis.enabled: true
-        xAxis.minimum: 0
-        xAxis.maximum: backgroundRectangle.width - transRect.width
-        yAxis.enabled: true
-        yAxis.minimum: 0
-        yAxis.maximum: backgroundRectangle.height - transRect.height
-    }
+        DragHandler {
+            target: transRect
+            xAxis.enabled: true
+            xAxis.minimum: 0
+            xAxis.maximum: backgroundRectangle.width - transRect.width
+            yAxis.enabled: true
+            yAxis.minimum: 0
+            yAxis.maximum: backgroundRectangle.height - transRect.height
+        }
+    } 
 }

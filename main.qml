@@ -11,9 +11,37 @@ ApplicationWindow {
     title: qsTr("Секционирующие пункты")
 
     property string number: modalTextInput.displayText
-    property int numInt: parseInt(number)
+    property int numInt: parseInt(number) //количество вкладок
     property var componentTransformApp
     property var componentCardsApp: []
+    property var arrFullPower: [] //массив для сохранения отдельных наибольших мощностей по участкам
+    property var transformerRatings: [ //массив номинальных значений трансформаторов
+        0.1,
+        0.16,
+        0.25,
+        0.4,
+        0.63,
+        1,
+        1.6,
+        2.5,
+        4,
+        6.3,
+        10,
+        16,
+        25,
+        40,
+        63,
+        100,
+        160,
+        250,
+        400,
+        630,
+        1000,
+        1600,
+        2500,
+        4000,
+        6300
+    ]
 
     function onAcceptedDialog() {
 
@@ -26,15 +54,65 @@ ApplicationWindow {
             var string = ' Линия ' + (i + 1) + ' '
             dynamicTabBar.addItem(componentTabButton.createObject(dynamicTabBar, {"text": string}))
 
-            let compCardsApp = componentCards.createObject(stackTab)
+            let compCardsApp = componentCards.createObject(stackTab, {"componentNumber": i})
 
             componentCardsApp.push(compCardsApp)
+            arrFullPower.push(0)
         }
 
         modalDialog.accept()
     }
 
+    //Слот для вычисления требуемой полной мощности трансформатора
+    function slotCalculateFullPowerOfTransformer(transPow, compNum) {
+        root.arrFullPower[compNum] = transPow
+
+        let flag = true
+        for(let t = 0; t < numInt; ++t) {
+            if(root.arrFullPower[t] === 0) {
+                flag = false
+            }
+        }
+
+        if(flag) {
+            let sumFullPower = root.arrFullPower.reduce((sum, current) => sum + current, 0)
+
+            for(let y = 0; y < root.transformerRatings.length - 1; ++y) {
+                if(sumFullPower > root.transformerRatings[y] && sumFullPower < root.transformerRatings[y + 1]) {
+                    root.componentTransformApp.textTransPower = root.transformerRatings[y + 1]
+                } else if(sumFullPower < root.transformerRatings[0]) {
+                    dialogWarningRoot.title = "Мощность ниже 0.1 кВА"
+                    dialogWarningRoot.visible = true
+                } else if (sumFullPower > root.transformerRatings[root.transformerRatings.length - 1]){
+                    dialogWarningRoot.title = "Мощность выше 6300 кВА"
+                    dialogWarningRoot.visible = true
+                }
+            }
+        }
+    }
     /*******************************************************************************************************/
+
+    //Диалог с сообщениями пользователю
+    /**********************************************************************************************************/
+    Dialog {
+        id: dialogWarningRoot
+        modal: true
+        closePolicy: Popup.CloseOnEscape
+        palette.button: "#26972D"
+        palette.window: "#67E46F"
+        DialogButtonBox {
+            anchors.centerIn: parent
+            Layout.alignment: Qt.AlignHCenter
+            standardButtons: DialogButtonBox.Ok
+            onAccepted: {
+                dialogWarningRoot.visible = false
+            }
+        }
+
+        x: root.width / 2 - dialogWarningRoot.width / 2
+        y: root.height / 2 - dialogWarningRoot.height / 2
+    }
+    /**********************************************************************************************************/
 
     Rectangle {
         id: backgroundRectangle
@@ -92,31 +170,37 @@ ApplicationWindow {
             property var componentOutput: outData
             property var componentChart: chartComp
             property var componentCanv: canvCard
+            property alias componentNumber: inpData.componentNumber
 
             InputData {
                 property var dialogWarning: dialogWarning
+                property int componentNumber
 
                 id: inpData
                 x: 0
                 y: 0
+
+                Component.onCompleted: {
+                    inpData.signalCalculateTransformerPower.connect(slotCalculateFullPowerOfTransformer)
+                }
             }
 
             ChartCard {
                 id: chartComp
                 x: 0
-                y: 360
+                y: Screen.desktopAvailableHeight / 2 //360
             }
 
             OutputData {
                 id: outData
-                x: backgroundRectangle.width - 677
+                x: backgroundRectangle.width - Screen.desktopAvailableWidth / 2.015 //677
                 y: 0
             }
 
             CanvasCard {
                 id: canvCard
                 x: backgroundRectangle.width - inpData.width
-                y: 360
+                y: Screen.desktopAvailableHeight / 2 //360
             }
 
             //Диалог с сообщениями пользователю
