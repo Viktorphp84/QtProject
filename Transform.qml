@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import Qt.labs.qmlmodels
-import C_Model 1.0
+import CModel
 
 Item {
     id: transCard
@@ -259,7 +259,7 @@ Item {
             }
         }
 
-        Model {
+        СModel {
             id: c_model
         }
 
@@ -269,7 +269,6 @@ Item {
             anchors.topMargin: 10
             anchors.left: leftTopRect.right
             anchors.leftMargin: 2
-            //anchors.leftMargin: 52
             color: "#efefef"
             width: tableView.contentWidth
             height: tableView.contentHeight / tableView.rows
@@ -497,5 +496,5 @@ Item {
             yAxis.minimum: 0
             yAxis.maximum: backgroundRectangle.height - transRect.height
         }
-    } 
+    }
 }

@@ -1,7 +1,6 @@
 import QtQuick
 import QtCharts
 import Qt5Compat.GraphicalEffects
-//import QtQml 2.0
 
 Item {
     id: chartItem

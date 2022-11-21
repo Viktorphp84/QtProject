@@ -369,10 +369,10 @@ Rectangle {
 
                     } else if(delta < 0) {
 
-                        if((rootRect.height + delta) > root.height_360) {
+                        if((rootRect.height + delta) > root.height_300) {
                             rootRect.height += delta
                         } else {
-                            delta = root.height_360 - rootRect.height
+                            delta = root.height_300 - rootRect.height
                             rootRect.height += delta
                         }
                     }
