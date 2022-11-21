@@ -10,6 +10,14 @@ ApplicationWindow {
     visible: true
     title: qsTr("Секционирующие пункты")
 
+    readonly property int width_677:
+        (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //ширина окон
+    readonly property int height_360: Screen.desktopAvailableHeight / 2 //высота верхних окон
+    readonly property int height_300: Screen.desktopAvailableHeight / 2.4 //высота нижних окон
+    readonly property int variableWidth:
+        backgroundRectangle.width -
+        ((Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015) //ширина правых окон
+
     property string number: modalTextInput.displayText
     property int numInt: parseInt(number) //количество вкладок
     property var componentTransformApp
@@ -172,6 +180,24 @@ ApplicationWindow {
             property var componentCanv: canvCard
             property alias componentNumber: inpData.componentNumber
 
+            OutputData {
+                id: outData
+                x: root.width_677 //677
+                y: 0
+            }
+
+            CanvasCard {
+                id: canvCard
+                x: root.width_677 //677
+                y: Screen.desktopAvailableHeight / 2 //360
+            }
+
+            ChartCard {
+                id: chartComp
+                x: 0
+                y: Screen.desktopAvailableHeight / 2 //360
+            }
+
             InputData {
                 property var dialogWarning: dialogWarning
                 property int componentNumber
@@ -183,24 +209,6 @@ ApplicationWindow {
                 Component.onCompleted: {
                     inpData.signalCalculateTransformerPower.connect(slotCalculateFullPowerOfTransformer)
                 }
-            }
-
-            ChartCard {
-                id: chartComp
-                x: 0
-                y: Screen.desktopAvailableHeight / 2 //360
-            }
-
-            OutputData {
-                id: outData
-                x: backgroundRectangle.width - Screen.desktopAvailableWidth / 2.015 //677
-                y: 0
-            }
-
-            CanvasCard {
-                id: canvCard
-                x: backgroundRectangle.width - inpData.width
-                y: Screen.desktopAvailableHeight / 2 //360
             }
 
             //Диалог с сообщениями пользователю

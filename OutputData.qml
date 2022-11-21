@@ -35,8 +35,8 @@ Item {
     property int outputDataWidth: 0
     property int outputDataHeight: 0
 
-    width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
-    height: (Screen.desktopAvailableHeight / 2 < 360) ? 360 : Screen.desktopAvailableHeight / 2 //360
+    width: root.variableWidth //677
+    height: root.height_360 //360
 
     DropShadow {
         anchors.fill: rectangleOutData
@@ -888,10 +888,10 @@ Item {
 
                         } else if(delta < 0) {
 
-                            if((outputData.height + delta) > 360) {
+                            if((outputData.height + delta) > root.height_360) {
                                 outputData.height += delta
                             } else {
-                                delta = 360 - outputData.height
+                                delta = root.height_360 - outputData.height
                                 outputData.height += delta
                             }
                         }
@@ -930,11 +930,11 @@ Item {
                         let delta = topMouseScopeOut.mouseY - clickPosTop
 
                         if(delta > 0) {
-                            if((outputData.height - delta) > 360) {
+                            if((outputData.height - delta) > root.height_360) {
                                 outputData.height -= delta
                                 outputData.y += delta
                             } else {
-                                delta = outputData.height - 360
+                                delta = outputData.height - root.height_360
                                 outputData.height -= delta
                                 outputData.y += delta
                             }
@@ -990,10 +990,10 @@ Item {
                                 outputData.width += delta
                             }
                         } else if (delta < 0) {
-                            if((outputData.width + delta) > 677) {
+                            if((outputData.width + delta) > root.variableWidth) {
                                 outputData.width += delta
                             } else {
-                                delta = 677 - outputData.width
+                                delta = root.variableWidth - outputData.width
                                 outputData.width += delta
                             }
                         }
@@ -1032,11 +1032,11 @@ Item {
                         let delta = leftMouseScopeOut.mouseX - clickPosLeft
 
                         if(delta > 0) {
-                            if((outputData.width - delta) > 677) {
+                            if((outputData.width - delta) > root.variableWidth) {
                                 outputData.width -= delta
                                 outputData.x += delta
                             } else {
-                                delta = outputData.width - 677
+                                delta = outputData.width - root.variableWidth
                                 outputData.width -= delta
                                 outputData.x += delta
                             }
@@ -1086,11 +1086,11 @@ Item {
                         let deltaY = topLeftMouseScopeOut.mouseY - clickPosTop
 
                         if(deltaY > 0) {
-                            if((outputData.height - deltaY) > 360) {
+                            if((outputData.height - deltaY) > root.height_360) {
                                 outputData.height -= deltaY
                                 outputData.y += deltaY
                             } else {
-                                deltaY = outputData.height - 360
+                                deltaY = outputData.height - root.height_360
                                 outputData.height -= deltaY
                                 outputData.y += deltaY
                             }
@@ -1108,11 +1108,11 @@ Item {
                         let deltaX = topLeftMouseScopeOut.mouseX - clickPosLeft
 
                         if(deltaX > 0) {
-                            if((outputData.width - deltaX) > 677) {
+                            if((outputData.width - deltaX) > root.variableWidth) {
                                 outputData.width -= deltaX
                                 outputData.x += deltaX
                             } else {
-                                deltaX = outputData.width - 677
+                                deltaX = outputData.width - root.variableWidth
                                 outputData.width -= deltaX
                                 outputData.x += deltaX
                             }
@@ -1162,11 +1162,11 @@ Item {
                         let deltaY = topRightMouseScopeOut.mouseY - clickPosTop
 
                         if(deltaY > 0) {
-                            if((outputData.height - deltaY) > 360) {
+                            if((outputData.height - deltaY) > root.height_360) {
                                 outputData.height -= deltaY
                                 outputData.y += deltaY
                             } else {
-                                deltaY = outputData.height - 360
+                                deltaY = outputData.height - root.height_360
                                 outputData.height -= deltaY
                                 outputData.y += deltaY
                             }
@@ -1191,10 +1191,10 @@ Item {
                                 outputData.width += deltaX
                             }
                         } else if (deltaX < 0) {
-                            if((outputData.width + deltaX) > 677) {
+                            if((outputData.width + deltaX) > root.variableWidth) {
                                 outputData.width += deltaX
                             } else {
-                                deltaX = 677 - outputData.width
+                                deltaX =root.variableWidth - outputData.width
                                 outputData.width += deltaX
                             }
                         }
@@ -1234,11 +1234,11 @@ Item {
                         let deltaX = bottomLeftMouseScopeOut.mouseX - clickPosLeft
 
                         if(deltaX > 0) {
-                            if((outputData.width - deltaX) > 677) {
+                            if((outputData.width - deltaX) > root.variableWidth) {
                                 outputData.width -= deltaX
                                 outputData.x += deltaX
                             } else {
-                                deltaX = outputData.width - 677
+                                deltaX = outputData.width - root.variableWidth
                                 outputData.width -= deltaX
                                 outputData.x += deltaX
                             }
@@ -1266,10 +1266,10 @@ Item {
 
                         } else if(deltaY < 0) {
 
-                            if((outputData.height + deltaY) > 360) {
+                            if((outputData.height + deltaY) > root.height_360) {
                                 outputData.height += deltaY
                             } else {
-                                deltaY = 360 - outputData.height
+                                deltaY = root.height_360 - outputData.height
                                 outputData.height += deltaY
                             }
                         }
@@ -1315,10 +1315,10 @@ Item {
                             outputData.width += deltaX
                         }
                     } else if (deltaX < 0) {
-                        if((outputData.width + deltaX) > 677) {
+                        if((outputData.width + deltaX) > root.variableWidth) {
                             outputData.width += deltaX
                         } else {
-                            deltaX = 677 - outputData.width
+                            deltaX = root.variableWidth - outputData.width
                             outputData.width += deltaX
                         }
                     }
@@ -1336,10 +1336,10 @@ Item {
 
                     } else if(deltaY < 0) {
 
-                        if((outputData.height + deltaY) > 360) {
+                        if((outputData.height + deltaY) > root.height_360) {
                             outputData.height += deltaY
                         } else {
-                            deltaY = 360 - outputData.height
+                            deltaY = root.height_360 - outputData.height
                             outputData.height += deltaY
                         }
                     }

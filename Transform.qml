@@ -84,6 +84,11 @@ Item {
                 rectTransformerPower.z = 10
                 transRect.z = 0
             }
+
+            onPressed: {
+                rectTransformerPower.z = 10
+                transRect.z = 0
+            }
         }
 
         RowLayout {
@@ -140,6 +145,11 @@ Item {
             anchors.fill: parent
 
             onClicked: {
+                rectTransformerPower.z = 0
+                transRect.z = 10
+            }
+
+            onPressed: {
                 rectTransformerPower.z = 0
                 transRect.z = 10
             }

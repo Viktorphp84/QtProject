@@ -5,8 +5,8 @@ import QtQuick.Shapes
 
 Rectangle {
     id: rootRect
-    width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
-    height: (Screen.desktopAvailableHeight / 2.4 < 300) ? 300 : Screen.desktopAvailableHeight / 2.4 //300
+    width: root.variableWidth //677
+    height: root.height_300 //300
     border.color: "#d1d1d1"
     border.width: 2
     radius: 5
@@ -119,32 +119,6 @@ Rectangle {
             anchors.rightMargin: 4
             anchors.left: parent.left
             anchors.leftMargin: 4
-            //contextType: "2d"
-            /*DragHandler {
-                target: canv
-            }*/
-
-            /*ShapePath {
-                id: shapePath
-                startX: 50
-                startY: 50
-                strokeColor: "blue"
-                strokeWidth: 2
-                fillColor: "transparent"
-                capStyle: ShapePath.RoundCap
-
-                PathArc {
-                    x: 0
-                    y: 100
-                    radiusX: 100
-                    radiusY: 100
-                    useLargeArc: true
-                }
-
-                PathSvg {
-                    path: "L 150 50 L 100 150 z"
-                }
-            }*/
 
             property real lastX: 0
             property real lastY: 0
@@ -395,10 +369,10 @@ Rectangle {
 
                     } else if(delta < 0) {
 
-                        if((rootRect.height + delta) > 360) {
+                        if((rootRect.height + delta) > root.height_360) {
                             rootRect.height += delta
                         } else {
-                            delta = 360 - rootRect.height
+                            delta = root.height_360 - rootRect.height
                             rootRect.height += delta
                         }
                     }
@@ -438,11 +412,11 @@ Rectangle {
                     let delta = topMouseScopeCanv.mouseY - clickPosTop
 
                     if(delta > 0) {
-                        if((rootRect.height - delta) > 300) {
+                        if((rootRect.height - delta) > root.height_300) {
                             rootRect.height -= delta
                             rootRect.y += delta
                         } else {
-                            delta = rootRect.height - 300
+                            delta = rootRect.height - root.height_300
                             rootRect.height -= delta
                             rootRect.y += delta
                         }
@@ -498,10 +472,10 @@ Rectangle {
                             rootRect.width += delta
                         }
                     } else if (delta < 0) {
-                        if((rootRect.width + delta) > 677) {
+                        if((rootRect.width + delta) > root.variableWidth) {
                             rootRect.width += delta
                         } else {
-                            delta = 677 - rootRect.width
+                            delta = root.variableWidth - rootRect.width
                             rootRect.width += delta
                         }
                     }
@@ -540,11 +514,11 @@ Rectangle {
                     let delta = leftMouseScopeCanv.mouseX - clickPosLeft
 
                     if(delta > 0) {
-                        if((rootRect.width - delta) > 677) {
+                        if((rootRect.width - delta) > root.variableWidth) {
                             rootRect.width -= delta
                             rootRect.x += delta
                         } else {
-                            delta = rootRect.width - 677
+                            delta = rootRect.width - root.variableWidth
                             rootRect.width -= delta
                             rootRect.x += delta
                         }
@@ -595,11 +569,11 @@ Rectangle {
                     let deltaY = topLeftMouseScopeCanv.mouseY - clickPosTop
 
                     if(deltaY > 0) {
-                        if((rootRect.height - deltaY) > 300) {
+                        if((rootRect.height - deltaY) > root.height_300) {
                             rootRect.height -= deltaY
                             rootRect.y += deltaY
                         } else {
-                            deltaY = rootRect.height - 300
+                            deltaY = rootRect.height - root.height_300
                             rootRect.height -= deltaY
                             rootRect.y += deltaY
                         }
@@ -617,11 +591,11 @@ Rectangle {
                     let deltaX = topLeftMouseScopeCanv.mouseX - clickPosLeft
 
                     if(deltaX > 0) {
-                        if((rootRect.width - deltaX) > 677) {
+                        if((rootRect.width - deltaX) > root.variableWidth) {
                             rootRect.width -= deltaX
                             rootRect.x += deltaX
                         } else {
-                            deltaX = rootRect.width - 677
+                            deltaX = rootRect.width - root.variableWidth
                             rootRect.width -= deltaX
                             rootRect.x += deltaX
                         }
@@ -672,11 +646,11 @@ Rectangle {
                     let deltaY = topRightMouseScopeCanv.mouseY - clickPosTop
 
                     if(deltaY > 0) {
-                        if((rootRect.height - deltaY) > 300) {
+                        if((rootRect.height - deltaY) > root.height_300) {
                             rootRect.height -= deltaY
                             rootRect.y += deltaY
                         } else {
-                            deltaY = rootRect.height - 300
+                            deltaY = rootRect.height - root.height_300
                             rootRect.height -= deltaY
                             rootRect.y += deltaY
                         }
@@ -701,10 +675,10 @@ Rectangle {
                             rootRect.width += deltaX
                         }
                     } else if (deltaX < 0) {
-                        if((rootRect.width + deltaX) > 677) {
+                        if((rootRect.width + deltaX) > root.variableWidth) {
                             rootRect.width += deltaX
                         } else {
-                            deltaX = 677 - rootRect.width
+                            deltaX = root.variableWidth - rootRect.width
                             rootRect.width += deltaX
                         }
                     }
@@ -744,11 +718,11 @@ Rectangle {
                     let deltaX = bottomLeftMouseScopeCanv.mouseX - clickPosLeft
 
                     if(deltaX > 0) {
-                        if((rootRect.width - deltaX) > 677) {
+                        if((rootRect.width - deltaX) > root.variableWidth) {
                             rootRect.width -= deltaX
                             rootRect.x += deltaX
                         } else {
-                            deltaX = rootRect.width - 677
+                            deltaX = rootRect.width - root.variableWidth
                             rootRect.width -= deltaX
                             rootRect.x += deltaX
                         }
@@ -776,10 +750,10 @@ Rectangle {
 
                     } else if(deltaY < 0) {
 
-                        if((rootRect.height + deltaY) > 360) {
+                        if((rootRect.height + deltaY) > root.height_300) {
                             rootRect.height += deltaY
                         } else {
-                            deltaY = 360 - rootRect.height
+                            deltaY = root.height_300 - rootRect.height
                             rootRect.height += deltaY
                         }
                     }
@@ -825,10 +799,10 @@ Rectangle {
                         rootRect.width += deltaX
                     }
                 } else if (deltaX < 0) {
-                    if((rootRect.width + deltaX) > 677) {
+                    if((rootRect.width + deltaX) > root.variableWidth) {
                         rootRect.width += deltaX
                     } else {
-                        deltaX = 677 - rootRect.width
+                        deltaX = root.variableWidth - rootRect.width
                         rootRect.width += deltaX
                     }
                 }
@@ -846,10 +820,10 @@ Rectangle {
 
                 } else if(deltaY < 0) {
 
-                    if((rootRect.height + deltaY) > 360) {
+                    if((rootRect.height + deltaY) > root.height_300) {
                         rootRect.height += deltaY
                     } else {
-                        deltaY = 360 - rootRect.height
+                        deltaY = root.height_300 - rootRect.height
                         rootRect.height += deltaY
                     }
                 }

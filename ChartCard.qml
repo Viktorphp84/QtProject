@@ -39,8 +39,8 @@ Item {
 
     Rectangle {
         id: rectChart
-        width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
-        height: (Screen.desktopAvailableHeight / 2.4 < 300) ? 300 : Screen.desktopAvailableHeight / 2.4 //300
+        width: root.width_677 //677
+        height: root.height_300 //300
         radius: 5
         border.color: "#d1d1d1"
         border.width: 2
@@ -152,7 +152,7 @@ Item {
                     rectChart.width = backgroundRectangle.width
                     rectChart.height = backgroundRectangle.height
                     rectChart.x = 0
-                    rectChart.y = -inpData.height
+                    rectChart.y = -(Screen.desktopAvailableHeight / 2)
                 }
             }
 
@@ -189,17 +189,17 @@ Item {
                     if(chartItem.activeFocusOnWindow) {
                         let delta = bottomMouseScope.mouseY - clickPosBottom
                         if(delta > 0) {
-                            if((rectChart.height + delta) < (backgroundRectangle.height - (360 + rectChart.y))) {
+                            if((rectChart.height + delta) < (backgroundRectangle.height - (root.height_360 + rectChart.y))) {
                                 rectChart.height += delta
                             } else {
-                                delta = (backgroundRectangle.height - (360 + rectChart.y)) - rectChart.height
+                                delta = (backgroundRectangle.height - (root.height_360 + rectChart.y)) - rectChart.height
                                 rectChart.height += delta
                             }
                         } else if (delta < 0) {
-                            if((rectChart.height + delta) > 300) {
+                            if((rectChart.height + delta) > root.height_300) {
                                 rectChart.height += delta
                             } else {
-                                delta = 300 - rectChart.height
+                                delta = root.height_300 - rectChart.height
                                 rectChart.height += delta
                             }
                         }
@@ -237,20 +237,20 @@ Item {
                     if(chartItem.activeFocusOnWindow) {
                         let delta = topMouseScope.mouseY - clickPosTop
                         if(delta > 0) {
-                            if((rectChart.height - delta) > 300) {
+                            if((rectChart.height - delta) > root.height_300) {
                                 rectChart.height -= delta
                                 rectChart.y += delta
                             } else {
-                                delta = rectChart.height - 300
+                                delta = rectChart.height - root.height_300
                                 rectChart.height -= delta
                                 rectChart.y += delta
                             }
                         } else if(delta < 0) {
-                            if((rectChart.height - delta) < (360 + rectChart.y + rectChart.height)) {
+                            if((rectChart.height - delta) < (root.height_360 + rectChart.y + rectChart.height)) {
                                 rectChart.height -= delta
                                 rectChart.y += delta
                             } else {
-                                delta = rectChart.height - (360 + rectChart.y + rectChart.height)
+                                delta = rectChart.height - (root.height_360 + rectChart.y + rectChart.height)
                                 rectChart.height -= delta
                                 rectChart.y += delta
                             }
@@ -291,11 +291,11 @@ Item {
                     if(chartItem.activeFocusOnWindow) {
                         let delta = leftMouseScope.mouseX - clickPosLeft
                         if(delta > 0) {
-                            if((rectChart.width - delta) > 677) {
+                            if((rectChart.width - delta) > root.width_677) {
                                 rectChart.width -= delta
                                 rectChart.x += delta
                             } else {
-                                delta = rectChart.width - 677
+                                delta = rectChart.width - root.width_677
                                 rectChart.width -= delta
                                 rectChart.x += delta
                             }
@@ -350,10 +350,10 @@ Item {
                                 rectChart.width += delta
                             }
                         } else if (delta < 0) {
-                            if((rectChart.width + delta) > 677) {
+                            if((rectChart.width + delta) > root.width_677) {
                                 rectChart.width += delta
                             } else {
-                                delta = 677 - rectChart.width
+                                delta = root.width_677 - rectChart.width
                                 rectChart.width += delta
                             }
                         }
@@ -395,20 +395,20 @@ Item {
                         //Верхняя область
                         let deltaY = topLeftMouseScope.mouseY - clickPosTop
                         if(deltaY > 0) {
-                            if((rectChart.height - deltaY) > 300) {
+                            if((rectChart.height - deltaY) > root.height_300) {
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             } else {
-                                deltaY = rectChart.height - 300
+                                deltaY = rectChart.height - root.height_300
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             }
                         } else if(deltaY < 0) {
-                            if((rectChart.height - deltaY) < (360 + rectChart.y + rectChart.height)) {
+                            if((rectChart.height - deltaY) < (root.height_360 + rectChart.y + rectChart.height)) {
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             } else {
-                                deltaY = rectChart.height - (360 + rectChart.y + rectChart.height)
+                                deltaY = rectChart.height - (root.height_360 + rectChart.y + rectChart.height)
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             }
@@ -417,11 +417,11 @@ Item {
                         //Левая область
                         let deltaX = topLeftMouseScope.mouseX - clickPosLeft
                         if(deltaX > 0) {
-                            if((rectChart.width - deltaX) > 677) {
+                            if((rectChart.width - deltaX) > root.width_677) {
                                 rectChart.width -= deltaX
                                 rectChart.x += deltaX
                             } else {
-                                deltaX = rectChart.width - 677
+                                deltaX = rectChart.width - root.width_677
                                 rectChart.width -= deltaX
                                 rectChart.x += deltaX
                             }
@@ -473,20 +473,20 @@ Item {
                         //Верхняя область
                         let deltaY = topRightMouseScope.mouseY - clickPosTop
                         if(deltaY > 0) {
-                            if((rectChart.height - deltaY) > 300) {
+                            if((rectChart.height - deltaY) > root.height_300) {
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             } else {
-                                deltaY = rectChart.height - 300
+                                deltaY = rectChart.height - root.height_300
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             }
                         } else if(deltaY < 0) {
-                            if((rectChart.height - deltaY) < (360 + rectChart.y + rectChart.height)) {
+                            if((rectChart.height - deltaY) < (root.height_360 + rectChart.y + rectChart.height)) {
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             } else {
-                                deltaY = rectChart.height - (360 + rectChart.y + rectChart.height)
+                                deltaY = rectChart.height - (root.height_360 + rectChart.y + rectChart.height)
                                 rectChart.height -= deltaY
                                 rectChart.y += deltaY
                             }
@@ -502,10 +502,10 @@ Item {
                                 rectChart.width += deltaX
                             }
                         } else if (deltaX < 0) {
-                            if((rectChart.width + deltaX) > 677) {
+                            if((rectChart.width + deltaX) > root.width_677) {
                                 rectChart.width += deltaX
                             } else {
-                                deltaX = 677 - rectChart.width
+                                deltaX = root.width_677 - rectChart.width
                                 rectChart.width += deltaX
                             }
                         }
@@ -554,10 +554,10 @@ Item {
                                 rectChart.width += deltaX
                             }
                         } else if (deltaX < 0) {
-                            if((rectChart.width + deltaX) > 677) {
+                            if((rectChart.width + deltaX) > root.width_677) {
                                 rectChart.width += deltaX
                             } else {
-                                deltaX = 677 - rectChart.width
+                                deltaX = root.width_677 - rectChart.width
                                 rectChart.width += deltaX
                             }
                         }
@@ -565,17 +565,17 @@ Item {
                         //Нижняя область
                         let deltaY = bottomRightMouseScope.mouseY - clickPosBottom
                         if(deltaY > 0) {
-                            if((rectChart.height + deltaY) < (backgroundRectangle.height - (360 + rectChart.y))) {
+                            if((rectChart.height + deltaY) < (backgroundRectangle.height - (root.height_360 + rectChart.y))) {
                                 rectChart.height += deltaY
                             } else {
-                                deltaY = (backgroundRectangle.height - (360 + rectChart.y)) - rectChart.height
+                                deltaY = (backgroundRectangle.height - (root.height_360 + rectChart.y)) - rectChart.height
                                 rectChart.height += deltaY
                             }
                         } else if (deltaY < 0) {
-                            if((rectChart.height + deltaY) > 300) {
+                            if((rectChart.height + deltaY) > root.height_300) {
                                 rectChart.height += deltaY
                             } else {
-                                deltaY = 300 - rectChart.height
+                                deltaY = root.height_300 - rectChart.height
                                 rectChart.height += deltaY
                             }
                         }
@@ -617,17 +617,17 @@ Item {
                         //Нижняя область
                         let deltaY = bottomLeftMouseScope.mouseY - clickPosBottom
                         if(deltaY > 0) {
-                            if((rectChart.height + deltaY) < (backgroundRectangle.height - (360 + rectChart.y))) {
+                            if((rectChart.height + deltaY) < (backgroundRectangle.height - (root.height_360 + rectChart.y))) {
                                 rectChart.height += deltaY
                             } else {
-                                deltaY = (backgroundRectangle.height - (360 + rectChart.y)) - rectChart.height
+                                deltaY = (backgroundRectangle.height - (root.height_360 + rectChart.y)) - rectChart.height
                                 rectChart.height += deltaY
                             }
                         } else if (deltaY < 0) {
-                            if((rectChart.height + deltaY) > 300) {
+                            if((rectChart.height + deltaY) > root.height_300) {
                                 rectChart.height += deltaY
                             } else {
-                                deltaY = 300 - rectChart.height
+                                deltaY = root.height_300 - rectChart.height
                                 rectChart.height += deltaY
                             }
                         }
@@ -635,11 +635,11 @@ Item {
                         //Левая область
                         let deltaX = bottomLeftMouseScope.mouseX - clickPosLeft
                         if(deltaX > 0) {
-                            if((rectChart.width - deltaX) > 677) {
+                            if((rectChart.width - deltaX) > root.width_677) {
                                 rectChart.width -= deltaX
                                 rectChart.x += deltaX
                             } else {
-                                deltaX = rectChart.width - 677
+                                deltaX = rectChart.width - root.width_677
                                 rectChart.width -= deltaX
                                 rectChart.x += deltaX
                             }

@@ -7,8 +7,8 @@ import QtCharts
 
 Item {
     id: inputData
-    width: (Screen.desktopAvailableWidth / 2.015 < 677) ? 677 : Screen.desktopAvailableWidth / 2.015 //677
-    height: (Screen.desktopAvailableHeight / 2 < 360) ? 360 : Screen.desktopAvailableHeight / 2 //360
+    width: root.width_677 //677
+    height: root.height_360 //360
 
     property var component
 
@@ -2027,20 +2027,28 @@ Item {
 
                 onClicked: {
 
-                    if(calculateParametrs()) {
-                        //Перерасчет сечения по максимальному отклонению, если поставлен флаг в checkBox2
-                        if(checkBox2.checkState) {
-                            recalculateSection()
-                            refineLosses()
-                        }
+                    if(textFieldConnectionDiagram.text === "") {
 
-                        //Рассчет расстояний до СП
-                        if(checkBox1.checkState) {
-                            calculateRecloser()
-                        }
+                        dialogWarning.title = "Выберите параметры трансформатора!"
+                        dialogWarning.visible = true
 
-                        canvCard.canvas.requestPaint()
-                    }                
+                    } else {
+
+                        if(calculateParametrs()) {
+                            //Перерасчет сечения по максимальному отклонению, если поставлен флаг в checkBox2
+                            if(checkBox2.checkState) {
+                                recalculateSection()
+                                refineLosses()
+                            }
+
+                            //Рассчет расстояний до СП
+                            if(checkBox1.checkState) {
+                                calculateRecloser()
+                            }
+
+                            canvCard.canvas.requestPaint()
+                        }
+                    }
                 }
             }
             /**********************************************************************************************************/
@@ -2086,10 +2094,10 @@ Item {
 
                         } else if(delta < 0) {
 
-                            if((inputData.height + delta) > 360) {
+                            if((inputData.height + delta) > root.height_360) {
                                 inputData.height += delta
                             } else {
-                                delta = 360 - inputData.height
+                                delta = root.height_360 - inputData.height
                                 inputData.height += delta
                             }
                         }
@@ -2128,11 +2136,11 @@ Item {
                         let delta = topMouseScopeInp.mouseY - clickPosTop
 
                         if(delta > 0) {
-                            if((inputData.height - delta) > 360) {
+                            if((inputData.height - delta) > root.height_360) {
                                 inputData.height -= delta
                                 inputData.y += delta
                             } else {
-                                delta = inputData.height - 360
+                                delta = inputData.height - root.height_360
                                 inputData.height -= delta
                                 inputData.y += delta
                             }
