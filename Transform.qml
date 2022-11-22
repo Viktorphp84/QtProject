@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import Qt.labs.qmlmodels
-import CModel
+import CppModel
 
 Item {
     id: transCard
@@ -259,10 +259,6 @@ Item {
             }
         }
 
-        СModel {
-            id: c_model
-        }
-
         Rectangle {
             id: headerRect
             anchors.top: grandLabelTrans.bottom
@@ -295,7 +291,9 @@ Item {
             columnSpacing: 2
             rowSpacing: 2
 
-            model: c_model
+            model: CppTableModel {
+
+            }
 
             property var object: rectCell
 

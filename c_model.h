@@ -10,7 +10,7 @@
 #include <QTextStream>
 
 
-class CModel : public QAbstractTableModel
+class CppModel : public QAbstractTableModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -19,7 +19,7 @@ class CModel : public QAbstractTableModel
     QFile saveFile;
 
 public:
-    explicit CModel(QObject *parent = nullptr);
+    explicit CppModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex& = QModelIndex()) const override;
     int columnCount(const QModelIndex& = QModelIndex()) const override;

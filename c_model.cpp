@@ -1,6 +1,6 @@
 #include "c_model.h"
 
-CModel::CModel(QObject *parent): QAbstractTableModel(parent) {
+CppModel::CppModel(QObject *parent): QAbstractTableModel(parent) {
     saveFile.setFileName("savaData.txt");
     if(saveFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&saveFile);
@@ -15,15 +15,15 @@ CModel::CModel(QObject *parent): QAbstractTableModel(parent) {
     }
 }
 
-int CModel:: rowCount(const QModelIndex&) const  {
+int CppModel:: rowCount(const QModelIndex&) const  {
     return dataModel.getRow();
 }
 
-int CModel::columnCount(const QModelIndex&) const {
+int CppModel::columnCount(const QModelIndex&) const {
     return dataModel.getColumn();
 }
 
-QVariant CModel::data(const QModelIndex& index, int role) const {
+QVariant CppModel::data(const QModelIndex& index, int role) const {
     switch (role) {
         case Qt::DisplayRole: {
             double number = dataModel.Data_C_Model::getData(index.column(), index.row());
@@ -36,17 +36,17 @@ QVariant CModel::data(const QModelIndex& index, int role) const {
     return QVariant();
 }
 
-QModelIndex CModel::index(int row, int column, const QModelIndex &parent) const {
+QModelIndex CppModel::index(int row, int column, const QModelIndex &parent) const {
     Q_UNUSED( parent)
-    return CModel::createIndex(row, column);
+    return CppModel::createIndex(row, column);
 }
 
-QHash<int, QByteArray> CModel::roleNames() const {
+QHash<int, QByteArray> CppModel::roleNames() const {
     return { {Qt::DisplayRole, "display"},
              {Qt::UserRole,    "userRole"}};
 }
 
-void CModel::addColumn() {
+void CppModel::addColumn() {
     beginInsertColumns(QModelIndex(), columnCount(), columnCount());
 
     dataModel.setColumn();
@@ -55,7 +55,7 @@ void CModel::addColumn() {
     endInsertColumns();
 }
 
-void CModel::deleteColumn(int index) {
+void CppModel::deleteColumn(int index) {
     beginRemoveColumns(QModelIndex(), int(index / 4), int(index / 4));
 
     dataModel.deleteData(int(index / 4));
@@ -64,7 +64,7 @@ void CModel::deleteColumn(int index) {
     endRemoveColumns();
 }
 
-void CModel::writeData(int index, QString str) {
+void CppModel::writeData(int index, QString str) {
     int column = index / 4;
     int row = index - 4 * column;
     if(column < dataModel.getColumn()) {
@@ -72,8 +72,8 @@ void CModel::writeData(int index, QString str) {
     }
     if(saveFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream writeStream(&saveFile);
-        for(int i = 0; i < CModel::rowCount(); ++i) {
-            for(int n = 0; n < CModel::columnCount(); ++n) {
+        for(int i = 0; i < CppModel::rowCount(); ++i) {
+            for(int n = 0; n < CppModel::columnCount(); ++n) {
                 writeStream << dataModel.getData(n, i) << " ";
             }
             writeStream << "\n";
@@ -82,7 +82,7 @@ void CModel::writeData(int index, QString str) {
     }
 }
 
-void CModel::rewriteData() {
+void CppModel::rewriteData() {
     if(saveFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&saveFile);
         dataModel.cleanData();
@@ -107,13 +107,13 @@ void CModel::rewriteData() {
     }
 }
 
-void CModel::setDefaultModel() {
+void CppModel::setDefaultModel() {
     beginResetModel();
     dataModel.setDefault();
     endResetModel();
 }
 
-double CModel::getTransformerPower(int index) {
+double CppModel::getTransformerPower(int index) {
     int column = qFloor(index / 4);
     return dataModel.Data_C_Model::getData(column, 0);
 }
