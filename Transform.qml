@@ -279,6 +279,10 @@ Item {
             color: "#efefef"
         }
 
+        CustomModel {
+            id: c_model
+        }
+
         TableView {
             id: tableView
             anchors.top: headerRect.bottom
@@ -291,9 +295,7 @@ Item {
             columnSpacing: 2
             rowSpacing: 2
 
-            model: CppTableModel {
-
-            }
+            model: c_model
 
             property var object: rectCell
 

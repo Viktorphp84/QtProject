@@ -1,7 +1,11 @@
 #include "c_model.h"
 
 CppModel::CppModel(QObject *parent): QAbstractTableModel(parent) {
-    saveFile.setFileName("savaData.txt");
+
+    if(!QFile::exists("saveData.txt")) {
+        dataModel.setDefault();
+    }
+    saveFile.setFileName("saveData.txt");
     if(saveFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&saveFile);
         QString line = in.readLine();

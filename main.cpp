@@ -10,8 +10,9 @@ int main(int argc, char *argv[])
 #endif
     QApplication app(argc, argv);
 
-    qmlRegisterType<CppModel>("CppModel", 1, 0, "СppTableModel");
+
     qmlRegisterType<ParameterCalculation>("ParameterCalculation", 1, 0, "ParameterCalculation");
+    qmlRegisterType<CppModel>("CppModel", 1, 0, "CustomModel");
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));
