@@ -6,5 +6,6 @@
         <file>InputData.qml</file>
         <file>OutputData.qml</file>
         <file>Transform.qml</file>
+        <file>icon.ico</file>
     </qresource>
 </RCC>

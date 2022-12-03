@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QIcon>
 #include "c_model.h"
 #include "parametercalculation.h"
 
@@ -10,6 +11,7 @@ int main(int argc, char *argv[])
 #endif
     QApplication app(argc, argv);
 
+    app.setWindowIcon(QIcon(":/icon.ico"));
 
     qmlRegisterType<ParameterCalculation>("ParameterCalculation", 1, 0, "ParameterCalculation");
     qmlRegisterType<CppModel>("CppModel", 1, 0, "CustomModel");
