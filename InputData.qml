@@ -1135,6 +1135,8 @@ Item {
                             chartComp.tickCountY = tickY
                             inputData.vectorResistancePhaseZero = []
                         }
+
+                        canvCard.canvas.requestPaint()
                         /******************************************************************************************/
                     }
                 }
@@ -2044,6 +2046,13 @@ Item {
                             //Рассчет расстояний до СП
                             if(checkBox1.checkState) {
                                 calculateRecloser()
+                            }
+
+                            //Если выбран рассчет по экономической плотности тока, то обнуляем строки сечений
+                            if(checkBox3.checkState) {
+                                for(let i = 0; i < columnScroll_4.children.length; ++i) {
+                                    columnScroll_4.children[i].currentIndex = 0
+                                }
                             }
 
                             canvCard.canvas.requestPaint()
