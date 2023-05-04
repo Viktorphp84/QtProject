@@ -8,3 +8,4 @@
 ![4](https://user-images.githubusercontent.com/94804834/236209246-66642c43-97ce-4db5-a61a-cdd4c80b43ad.png)
 ![5](https://user-images.githubusercontent.com/94804834/236209272-8dbc5baf-8d5d-431f-be37-5b5e64b4f432.png)
 ![6](https://user-images.githubusercontent.com/94804834/236209309-1a3ca24e-867d-4e16-9a47-09a881898248.png)
+[Свидетельство на программу РПЭС 0,4 кВ.pdf](https://github.com/Viktorphp84/QtProject/files/11397734/0.4.pdf)
