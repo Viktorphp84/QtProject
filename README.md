@@ -11,4 +11,6 @@
 
 [Свидетельство на программу РПЭС 0,4 кВ.pdf](https://github.com/Viktorphp84/QtProject/files/11397734/0.4.pdf)
 
-![Свидетельство о регистрации](https://user-images.githubusercontent.com/94804834/236213441-4fc0ed6a-c8e3-49e6-934c-ed696ff0d2c5.jpg)
+![Свидетельство о регистрации](https://user-images.githubusercontent.com/94804834/236214772-8b1657a0-722f-424c-9c85-e6391a59b719.jpg)
+
+
